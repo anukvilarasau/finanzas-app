@@ -1,9 +1,11 @@
-import { useState } from 'react'
-import { LayoutDashboard, PlusCircle, Clock, Wallet } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { LayoutDashboard, PlusCircle, Clock, Wallet, LogOut } from 'lucide-react'
+import { supabase } from './lib/supabase'
 import { useExpenses } from './hooks/useExpenses'
 import Dashboard from './components/Dashboard'
 import ExpenseForm from './components/ExpenseForm'
 import Timeline from './components/Timeline'
+import Login from './components/Login'
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard',       icon: LayoutDashboard },
@@ -13,7 +15,31 @@ const NAV = [
 
 export default function App() {
   const [view, setView] = useState('dashboard')
-  const store = useExpenses()
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setAuthLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const store = useExpenses(user?.id)
+
+  if (authLoading) {
+    return <div className="min-h-screen bg-slate-900" />
+  }
+
+  if (!user) {
+    return <Login />
+  }
 
   return (
     <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden">
@@ -51,34 +77,49 @@ export default function App() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-700">
+        <div className="p-4 border-t border-slate-700 space-y-2">
           <div className="bg-slate-700/50 rounded-xl p-3 text-center">
             <p className="text-xs text-slate-500 font-medium">Regla 50 / 30 / 20</p>
             <p className="text-xs text-slate-600 mt-1">Necesidades · Deseos · Ahorro</p>
           </div>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="w-full flex items-center gap-2 px-4 py-2 rounded-xl text-xs text-slate-500 hover:text-slate-300 hover:bg-slate-700 transition-all"
+          >
+            <LogOut size={14} />
+            Cerrar sesión
+          </button>
         </div>
       </aside>
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">
-        {view === 'dashboard' && (
-          <Dashboard
-            income={store.income}
-            expenses={store.expenses}
-            setIncome={store.setIncome}
-          />
-        )}
-        {view === 'nuevo' && (
-          <ExpenseForm
-            addExpense={store.addExpense}
-            onDone={() => setView('historial')}
-          />
-        )}
-        {view === 'historial' && (
-          <Timeline
-            expenses={store.expenses}
-            deleteExpense={store.deleteExpense}
-          />
+        {store.loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-slate-500 text-sm">Cargando datos...</div>
+          </div>
+        ) : (
+          <>
+            {view === 'dashboard' && (
+              <Dashboard
+                income={store.income}
+                expenses={store.expenses}
+                setIncome={store.setIncome}
+              />
+            )}
+            {view === 'nuevo' && (
+              <ExpenseForm
+                addExpense={store.addExpense}
+                onDone={() => setView('historial')}
+              />
+            )}
+            {view === 'historial' && (
+              <Timeline
+                expenses={store.expenses}
+                deleteExpense={store.deleteExpense}
+              />
+            )}
+          </>
         )}
       </main>
     </div>
