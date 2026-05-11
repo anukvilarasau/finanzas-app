@@ -1,12 +1,11 @@
 import { useState, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Trash2, Calendar, TrendingDown } from 'lucide-react'
-import { CATEGORY_MAP } from '../data/categories'
 import { fmt } from '../utils/finance'
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
-export default function Timeline({ expenses, deleteExpense }) {
+export default function Timeline({ expenses, budgetRules, deleteExpense }) {
   const now = new Date()
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth())
@@ -96,21 +95,22 @@ export default function Timeline({ expenses, deleteExpense }) {
         ) : (
           <div className="divide-y divide-zinc-50">
             {filtered.map(expense => {
-              const cat = CATEGORY_MAP[expense.category]
-              const initials = cat?.label?.slice(0, 2).toUpperCase() || '??'
+              const rule = budgetRules.find(r => r.id === expense.category)
+              const label = rule?.label || expense.category || 'Gasto'
+              const color = rule?.color || '#a1a1aa'
+              const initials = label.slice(0, 2).toUpperCase()
               return (
                 <div key={expense.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-zinc-50 transition-colors group">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-xs font-mono font-bold border border-zinc-100" style={{ color: cat?.color || '#a1a1aa' }}>
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-xs font-mono font-bold border border-zinc-100" style={{ color }}>
                     {initials}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-black truncate font-medium">{expense.description || cat?.label || 'Gasto'}</p>
+                    <p className="text-sm text-black truncate font-medium">{expense.description || label}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs font-mono" style={{ color: cat?.color || '#a1a1aa' }}>{cat?.label}</span>
+                      <span className="text-xs font-mono" style={{ color }}>{label}</span>
                       <span className="text-zinc-200">·</span>
                       <span className="text-xs text-zinc-400 font-mono flex items-center gap-1"><Calendar size={9} />{formatDate(expense.date)}</span>
-                      <span className="text-zinc-200">·</span>
-                      <span className="text-xs text-zinc-400 font-mono">{expense.type === 'necesidad' ? 'need' : 'want'}</span>
+                      {rule && <><span className="text-zinc-200">·</span><span className="text-xs text-zinc-400 font-mono">{rule.pct}%</span></>}
                     </div>
                   </div>
                   <p className="text-sm font-mono font-bold text-black shrink-0">{fmt(expense.amount)}</p>

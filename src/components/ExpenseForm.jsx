@@ -1,22 +1,32 @@
 import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
-import { CATEGORIES, CATEGORY_MAP } from '../data/categories'
 
-export default function ExpenseForm({ addExpense, onDone }) {
+export default function ExpenseForm({ addExpense, budgetRules }) {
   const today = new Date().toISOString().split('T')[0]
-  const [form, setForm] = useState({ amount: '', category: '', description: '', date: today })
+  const [form, setForm] = useState({ amount: '', ruleId: '', description: '', date: today })
   const [success, setSuccess] = useState(false)
 
-  const selectedCat = form.category ? CATEGORY_MAP[form.category] : null
+  const selectedRule = form.ruleId ? budgetRules.find(r => r.id === form.ruleId) : null
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!form.amount || !form.category) return
-    addExpense({ amount: Number(form.amount), category: form.category, description: form.description, date: form.date, type: selectedCat?.type || 'deseo' })
+    if (!form.amount || !form.ruleId) return
+
+    // type: use trackAs for built-in rules, or the rule.id for custom ones
+    const type = selectedRule?.trackAs || selectedRule?.id || 'deseo'
+
+    addExpense({
+      amount: Number(form.amount),
+      category: form.ruleId,   // store rule id in category for retrieval
+      description: form.description,
+      date: form.date,
+      type,
+    })
+
     setSuccess(true)
     setTimeout(() => {
       setSuccess(false)
-      setForm({ amount: '', category: '', description: '', date: today })
+      setForm({ amount: '', ruleId: '', description: '', date: today })
     }, 1500)
   }
 
@@ -42,6 +52,8 @@ export default function ExpenseForm({ addExpense, onDone }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+
+        {/* Amount */}
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
           <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-3">amount</label>
           <div className="flex items-center gap-2">
@@ -55,68 +67,62 @@ export default function ExpenseForm({ addExpense, onDone }) {
           </div>
         </div>
 
+        {/* Budget rule selection */}
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
           <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-4">category</label>
-          <div className="mb-4">
-            <p className="text-xs text-zinc-300 font-mono mb-2">// necesidades</p>
-            <div className="grid grid-cols-3 gap-2">
-              {CATEGORIES.filter(c => c.type === 'necesidad').map(cat => (
-                <CategoryBtn key={cat.id} cat={cat} selected={form.category === cat.id} onClick={() => setForm(f => ({ ...f, category: cat.id }))} />
-              ))}
-            </div>
+          <div className="grid grid-cols-2 gap-2">
+            {budgetRules.map(rule => {
+              const selected = form.ruleId === rule.id
+              return (
+                <button
+                  key={rule.id}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, ruleId: rule.id }))}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-all border text-left"
+                  style={selected
+                    ? { backgroundColor: rule.color + '15', borderColor: rule.color, color: rule.color }
+                    : { borderColor: '#e4e4e7', color: '#a1a1aa' }
+                  }
+                >
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: selected ? rule.color : '#d4d4d8' }} />
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{rule.label}</p>
+                    <p className="text-xs opacity-70">{rule.pct}% del ingreso</p>
+                  </div>
+                </button>
+              )
+            })}
           </div>
-          <div>
-            <p className="text-xs text-zinc-300 font-mono mb-2">// deseos</p>
-            <div className="grid grid-cols-3 gap-2">
-              {CATEGORIES.filter(c => c.type === 'deseo').map(cat => (
-                <CategoryBtn key={cat.id} cat={cat} selected={form.category === cat.id} onClick={() => setForm(f => ({ ...f, category: cat.id }))} />
-              ))}
-            </div>
-          </div>
-          {selectedCat && (
-            <div className="mt-4 flex items-center gap-2 text-xs px-3 py-2 rounded-lg bg-zinc-50 border border-zinc-200">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: selectedCat.color }} />
-              <span className="text-zinc-400 font-mono">
-                type: <span className="text-black">{selectedCat.type === 'necesidad' ? 'necesidad' : 'deseo'}</span>
-              </span>
-            </div>
-          )}
         </div>
 
+        {/* Description + Date */}
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-4">
           <div>
             <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-2">description</label>
-            <input type="text" placeholder="optional note..." value={form.description}
+            <input
+              type="text" placeholder="optional note..." value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              className="w-full bg-zinc-50 border border-zinc-200 text-black rounded-lg px-3 py-2.5 text-sm font-mono outline-none focus:border-black placeholder:text-zinc-300 transition-colors" />
+              className="w-full bg-zinc-50 border border-zinc-200 text-black rounded-lg px-3 py-2.5 text-sm font-mono outline-none focus:border-black placeholder:text-zinc-300 transition-colors"
+            />
           </div>
           <div>
             <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-2">date</label>
-            <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+            <input
+              type="date" value={form.date}
+              onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
               className="w-full bg-zinc-50 border border-zinc-200 text-black rounded-lg px-3 py-2.5 text-sm font-mono outline-none focus:border-black transition-colors"
-              style={{ colorScheme: 'light' }} />
+              style={{ colorScheme: 'light' }}
+            />
           </div>
         </div>
 
-        <button type="submit" disabled={!form.amount || !form.category}
-          className="w-full bg-black hover:bg-zinc-800 disabled:opacity-20 disabled:cursor-not-allowed text-white font-mono font-bold py-3.5 rounded-xl transition-colors text-sm">
+        <button
+          type="submit" disabled={!form.amount || !form.ruleId}
+          className="w-full bg-black hover:bg-zinc-800 disabled:opacity-20 disabled:cursor-not-allowed text-white font-mono font-bold py-3.5 rounded-xl transition-colors text-sm"
+        >
           add_expense()
         </button>
       </form>
     </div>
-  )
-}
-
-function CategoryBtn({ cat, selected, onClick }) {
-  return (
-    <button type="button" onClick={onClick}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono transition-all border"
-      style={selected
-        ? { backgroundColor: cat.color + '15', borderColor: cat.color, color: cat.color }
-        : { borderColor: '#e4e4e7', color: '#a1a1aa' }
-      }>
-      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: selected ? cat.color : '#d4d4d8' }} />
-      <span className="truncate">{cat.label}</span>
-    </button>
   )
 }

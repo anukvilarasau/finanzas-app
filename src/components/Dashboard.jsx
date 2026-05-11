@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Edit3, X, DollarSign, Settings, Plus, Trash2 } from 'lucide-react'
-import { CATEGORIES, CATEGORY_MAP } from '../data/categories'
+import { CATEGORY_MAP } from '../data/categories'
 import { analyzeFinances, getMonthExpenses, fmt } from '../utils/finance'
 
 const PRESET_COLORS = [
@@ -9,17 +9,18 @@ const PRESET_COLORS = [
   '#a855f7','#f59e0b','#ec4899','#f97316','#06b6d4','#84cc16','#ef4444',
 ]
 
-function getRuleActual(rule, analysis) {
+function getRuleActual(rule, analysis, monthExpenses) {
   if (rule.trackAs === 'necesidad') return analysis.needs
   if (rule.trackAs === 'deseo') return analysis.wants
   if (rule.trackAs === 'savings') return analysis.savings
-  return 0
+  // Custom rule: match expenses where category === rule.id
+  return monthExpenses.filter(e => e.category === rule.id).reduce((s, e) => s + e.amount, 0)
 }
 
 function buildRecommendations(budgetRules, analysis, income) {
   if (income === 0) return ['Configurá tu ingreso mensual para recibir recomendaciones personalizadas.']
   return budgetRules.filter(r => r.trackAs).map(rule => {
-    const actual = getRuleActual(rule, analysis)
+    const actual = getRuleActual(rule, analysis, monthExpenses)
     const target = income * (rule.pct / 100)
     if (rule.trackAs === 'savings') {
       return actual >= target
@@ -47,8 +48,8 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
   const savingsTarget = income * (savingsPct / 100)
   const savingsOk = income > 0 && analysis.savings >= savingsTarget
 
-  const categoryTotals = CATEGORIES
-    .map(cat => ({ name: cat.label, value: monthExpenses.filter(e => e.category === cat.id).reduce((s, e) => s + e.amount, 0), color: cat.color }))
+  const categoryTotals = budgetRules
+    .map(rule => ({ name: rule.label, value: getRuleActual(rule, analysis, monthExpenses), color: rule.color }))
     .filter(c => c.value > 0)
 
   const monthName = now.toLocaleString('es', { month: 'long', year: 'numeric' })
@@ -138,7 +139,7 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
           ) : (
             <div className="space-y-4">
               {budgetRules.map(rule => {
-                const actual = getRuleActual(rule, analysis)
+                const actual = getRuleActual(rule, analysis, monthExpenses)
                 const target = income * (rule.pct / 100)
                 return (
                   <AnalysisBar key={rule.id} label={`${rule.label} (${rule.pct}%)`} actual={actual} recommended={target} color={rule.color} over={rule.trackAs !== 'savings' && actual > target} isInverse={rule.trackAs === 'savings'} tracked={!!rule.trackAs} />
