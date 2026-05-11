@@ -1,9 +1,28 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { CATEGORY_MAP } from '../data/categories'
+
+export const DEFAULT_BUDGET_RULES = [
+  { id: 'r1', label: 'Necesidades', pct: 50, color: '#10b981', trackAs: 'necesidad' },
+  { id: 'r2', label: 'Deseos',      pct: 30, color: '#3b82f6', trackAs: 'deseo' },
+  { id: 'r3', label: 'Ahorro',      pct: 20, color: '#a855f7', trackAs: 'savings' },
+]
+
+const BUDGET_KEY = 'finanzas_budget_rules'
+
+function loadBudgetRules() {
+  try {
+    const raw = localStorage.getItem(BUDGET_KEY)
+    return raw ? JSON.parse(raw) : DEFAULT_BUDGET_RULES
+  } catch {
+    return DEFAULT_BUDGET_RULES
+  }
+}
 
 export function useExpenses(userId) {
   const [income, setIncomeState] = useState(0)
   const [expenses, setExpenses] = useState([])
+  const [budgetRules, setBudgetRulesState] = useState(loadBudgetRules)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -17,7 +36,13 @@ export function useExpenses(userId) {
         supabase.from('settings').select('income').eq('user_id', userId).single(),
       ])
 
-      if (expensesData) setExpenses(expensesData)
+      // Derive type from category since it's not stored in Supabase
+      if (expensesData) {
+        setExpenses(expensesData.map(e => ({
+          ...e,
+          type: CATEGORY_MAP[e.category]?.type ?? 'deseo',
+        })))
+      }
       if (settingsData) setIncomeState(settingsData.income)
 
       // Migrate localStorage data on first login
@@ -34,7 +59,12 @@ export function useExpenses(userId) {
               date: e.date,
             }))
             const { data: migrated } = await supabase.from('expenses').insert(toInsert).select()
-            if (migrated) setExpenses(migrated)
+            if (migrated) {
+              setExpenses(migrated.map(e => ({
+                ...e,
+                type: CATEGORY_MAP[e.category]?.type ?? 'deseo',
+              })))
+            }
           }
           if (local.income > 0) {
             await supabase.from('settings').upsert({ user_id: userId, income: local.income })
@@ -59,10 +89,21 @@ export function useExpenses(userId) {
   const addExpense = async (expense) => {
     const { data } = await supabase
       .from('expenses')
-      .insert({ ...expense, user_id: userId })
+      .insert({
+        user_id: userId,
+        amount: expense.amount,
+        category: expense.category,
+        description: expense.description,
+        date: expense.date,
+      })
       .select()
       .single()
-    if (data) setExpenses(prev => [data, ...prev])
+    if (data) {
+      setExpenses(prev => [{
+        ...data,
+        type: CATEGORY_MAP[data.category]?.type ?? 'deseo',
+      }, ...prev])
+    }
   }
 
   const deleteExpense = async (id) => {
@@ -70,5 +111,10 @@ export function useExpenses(userId) {
     setExpenses(prev => prev.filter(e => e.id !== id))
   }
 
-  return { income, expenses, setIncome, addExpense, deleteExpense, loading }
+  const setBudgetRules = (rules) => {
+    setBudgetRulesState(rules)
+    localStorage.setItem(BUDGET_KEY, JSON.stringify(rules))
+  }
+
+  return { income, expenses, budgetRules, setIncome, addExpense, deleteExpense, setBudgetRules, loading }
 }

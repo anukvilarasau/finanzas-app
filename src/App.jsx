@@ -99,7 +99,7 @@ export default function App() {
   ) : (
     <>
       {view === 'dashboard' && (
-        <Dashboard income={store.income} expenses={store.expenses} setIncome={store.setIncome} />
+        <Dashboard income={store.income} expenses={store.expenses} budgetRules={store.budgetRules} setIncome={store.setIncome} setBudgetRules={store.setBudgetRules} />
       )}
       {view === 'nuevo' && (
         <ExpenseForm addExpense={store.addExpense} onDone={() => navigate('historial')} />
