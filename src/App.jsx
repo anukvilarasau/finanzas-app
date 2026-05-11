@@ -31,22 +31,21 @@ export default function App() {
   }, [])
 
   const store = useExpenses(user?.id)
-
   const navigate = (id) => { setView(id); setMenuOpen(false) }
 
-  if (authLoading) return <div className="min-h-screen bg-black" />
+  if (authLoading) return <div className="min-h-screen bg-white" />
   if (!user) return <Login />
 
   const sidebar = (
     <>
-      <div className="p-5 border-b border-zinc-900">
+      <div className="p-5 border-b border-zinc-200">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
-            <Wallet size={16} className="text-black" />
+          <div className="w-9 h-9 bg-black rounded-lg flex items-center justify-center">
+            <Wallet size={16} className="text-white" />
           </div>
           <div>
-            <h1 className="font-mono font-bold text-white text-sm leading-none tracking-tight">FinanzasPro</h1>
-            <p className="text-xs text-zinc-600 mt-0.5 font-mono">v2.0</p>
+            <h1 className="font-mono font-bold text-black text-sm leading-none tracking-tight">FinanzasPro</h1>
+            <p className="text-xs text-zinc-400 mt-0.5 font-mono">v2.0</p>
           </div>
         </div>
       </div>
@@ -60,8 +59,8 @@ export default function App() {
               onClick={() => navigate(id)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 active
-                  ? 'bg-white text-black'
-                  : 'text-zinc-500 hover:bg-zinc-900 hover:text-white'
+                  ? 'bg-black text-white'
+                  : 'text-zinc-500 hover:bg-zinc-100 hover:text-black'
               }`}
             >
               <Icon size={16} />
@@ -71,14 +70,14 @@ export default function App() {
         })}
       </nav>
 
-      <div className="p-3 border-t border-zinc-900">
-        <div className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 text-center mb-2">
-          <p className="text-xs text-zinc-600 font-mono">50 / 30 / 20</p>
-          <p className="text-xs text-zinc-700 mt-0.5 font-mono">NEEDS · WANTS · SAVE</p>
+      <div className="p-3 border-t border-zinc-200">
+        <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-center mb-2">
+          <p className="text-xs text-zinc-400 font-mono">50 / 30 / 20</p>
+          <p className="text-xs text-zinc-300 mt-0.5 font-mono">NEEDS · WANTS · SAVE</p>
         </div>
         <button
           onClick={() => supabase.auth.signOut()}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-700 hover:text-zinc-300 hover:bg-zinc-900 transition-all font-mono"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-400 hover:text-black hover:bg-zinc-100 transition-all font-mono"
         >
           <LogOut size={13} />
           sign out
@@ -89,7 +88,7 @@ export default function App() {
 
   const content = store.loading ? (
     <div className="flex items-center justify-center h-full">
-      <p className="text-zinc-700 text-sm font-mono">loading_data...</p>
+      <p className="text-zinc-400 text-sm font-mono">loading_data...</p>
     </div>
   ) : (
     <>
@@ -106,37 +105,33 @@ export default function App() {
   )
 
   return (
-    <div className="flex h-screen bg-black text-white overflow-hidden">
+    <div className="flex h-screen bg-white text-black overflow-hidden">
 
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-56 bg-zinc-950 border-r border-zinc-900 flex-col shrink-0">
+      <aside className="hidden md:flex w-56 bg-white border-r border-zinc-200 flex-col shrink-0">
         {sidebar}
       </aside>
 
-      {/* Mobile overlay */}
       {menuOpen && (
-        <div className="fixed inset-0 bg-black/80 z-20 md:hidden" onClick={() => setMenuOpen(false)} />
+        <div className="fixed inset-0 bg-black/30 z-20 md:hidden" onClick={() => setMenuOpen(false)} />
       )}
 
-      {/* Mobile drawer */}
-      <aside className={`fixed top-0 left-0 h-full w-64 bg-zinc-950 border-r border-zinc-900 flex flex-col z-30 transition-transform duration-300 md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <button onClick={() => setMenuOpen(false)} className="absolute top-4 right-4 text-zinc-600 hover:text-white">
+      <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-zinc-200 flex flex-col z-30 transition-transform duration-300 md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <button onClick={() => setMenuOpen(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-black">
           <X size={18} />
         </button>
         {sidebar}
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile top bar */}
-        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-zinc-950 border-b border-zinc-900 shrink-0">
-          <button onClick={() => setMenuOpen(true)} className="text-zinc-500 hover:text-white">
+        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-zinc-200 shrink-0">
+          <button onClick={() => setMenuOpen(true)} className="text-zinc-400 hover:text-black">
             <Menu size={20} />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-white rounded-md flex items-center justify-center">
-              <Wallet size={12} className="text-black" />
+            <div className="w-6 h-6 bg-black rounded-md flex items-center justify-center">
+              <Wallet size={12} className="text-white" />
             </div>
-            <span className="font-mono font-bold text-white text-sm">FinanzasPro</span>
+            <span className="font-mono font-bold text-black text-sm">FinanzasPro</span>
           </div>
         </header>
 
