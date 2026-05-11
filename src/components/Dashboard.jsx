@@ -159,15 +159,6 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
             <BudgetEditor rules={budgetRules} onSave={(rules) => { setBudgetRules(rules); setEditingBudget(false) }} onCancel={() => setEditingBudget(false)} />
           ) : (
             <div className="space-y-4">
-              {/* Total spending bar */}
-              <AnalysisBar
-                label={`gastos_totales`}
-                actual={totalSpent}
-                recommended={spendBudget}
-                color="#000000"
-                over={isOverspending}
-              />
-              {/* Individual allocations (planned only) */}
               {budgetRules.filter(r => r.trackAs !== 'savings').map(rule => {
                 const target = income * (rule.pct / 100)
                 return (
