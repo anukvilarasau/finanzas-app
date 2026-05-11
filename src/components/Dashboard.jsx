@@ -120,61 +120,87 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
         />
       </div>
 
-      {/* Investment target */}
-      {income > 0 && savingsPct > 0 && (
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center shrink-0">
-            <PiggyBank size={18} className="text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="text-xs text-zinc-400 font-mono uppercase tracking-widest mb-1">// inversion_mensual</p>
-            <p className="text-2xl font-mono font-bold text-black">{fmt(savingsTarget)}</p>
-            <p className="text-xs text-zinc-400 font-mono mt-0.5">
-              {savingsPct}% de tu ingreso · {remaining >= savingsTarget ? `ya cubierto con ${fmt(remaining)} restante` : `te faltan ${fmt(Math.max(0, savingsTarget - remaining))}`}
-            </p>
-          </div>
-          {remaining >= savingsTarget
-            ? <CheckCircle className="text-black shrink-0" size={20} />
-            : <AlertTriangle className="text-zinc-300 shrink-0" size={20} />
-          }
-        </div>
-      )}
-
-      {/* Spending bar */}
+      {/* Gastar + Ahorro side by side */}
       {income > 0 && (
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <p className="text-xs text-zinc-400 font-mono uppercase tracking-widest mb-1">// budget_distribution</p>
-              <h3 className="text-sm font-semibold text-black">Distribución del ingreso</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Gastar card */}
+          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs text-zinc-400 font-mono uppercase tracking-widest">// gastar</p>
+              {!editingBudget && (
+                <button onClick={() => setEditingBudget(true)} className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-black font-mono transition-colors">
+                  <Settings size={12} />edit
+                </button>
+              )}
             </div>
-            {!editingBudget && (
-              <button onClick={() => setEditingBudget(true)} className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-black font-mono transition-colors">
-                <Settings size={12} />edit
-              </button>
+
+            {editingBudget ? (
+              <BudgetEditor rules={budgetRules} onSave={(rules) => { setBudgetRules(rules); setEditingBudget(false) }} onCancel={() => setEditingBudget(false)} />
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-2xl font-mono font-bold text-black">{fmt(totalSpent)}</p>
+                    <p className="text-xs text-zinc-400 font-mono mt-0.5">de {fmt(spendBudget)} disponibles</p>
+                  </div>
+                  <p className="text-sm font-mono font-semibold text-zinc-400">
+                    {spendBudget > 0 ? `${Math.min(((totalSpent / spendBudget) * 100), 100).toFixed(0)}%` : '—'}
+                  </p>
+                </div>
+                <div className="h-2 bg-zinc-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: spendBudget > 0 ? `${Math.min((totalSpent / spendBudget) * 100, 100)}%` : '0%',
+                      backgroundColor: isOverspending ? '#000000' : '#52525b',
+                    }}
+                  />
+                </div>
+                {isOverspending && (
+                  <p className="text-xs font-mono text-black">excedido por {fmt(totalSpent - spendBudget)}</p>
+                )}
+                {!isOverspending && (
+                  <p className="text-xs font-mono text-zinc-400">quedan {fmt(spendBudget - totalSpent)}</p>
+                )}
+              </div>
             )}
           </div>
 
-          {editingBudget ? (
-            <BudgetEditor rules={budgetRules} onSave={(rules) => { setBudgetRules(rules); setEditingBudget(false) }} onCancel={() => setEditingBudget(false)} />
-          ) : (
-            <div className="space-y-4">
-              {budgetRules.filter(r => r.trackAs !== 'savings').map(rule => {
-                const target = income * (rule.pct / 100)
-                return (
-                  <div key={rule.id} className="space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-zinc-400 font-mono">{rule.label} ({rule.pct}%)</span>
-                      <span className="text-zinc-400 font-mono">meta: {fmt(target)}</span>
-                    </div>
-                    <div className="h-1 bg-zinc-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${rule.pct}%`, backgroundColor: rule.color, opacity: 0.5 }} />
-                    </div>
+          {/* Ahorro card */}
+          {savingsPct > 0 && (
+            <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
+              <p className="text-xs text-zinc-400 font-mono uppercase tracking-widest mb-4">// ahorro_e_inversion</p>
+              <div className="space-y-3">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-2xl font-mono font-bold text-black">{fmt(savingsTarget)}</p>
+                    <p className="text-xs text-zinc-400 font-mono mt-0.5">{savingsPct}% de tu ingreso mensual</p>
                   </div>
-                )
-              })}
+                  {remaining >= savingsTarget
+                    ? <CheckCircle className="text-black" size={18} />
+                    : <AlertTriangle className="text-zinc-300" size={18} />
+                  }
+                </div>
+                <div className="h-2 bg-zinc-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: savingsTarget > 0 ? `${Math.min((remaining / savingsTarget) * 100, 100)}%` : '0%',
+                      backgroundColor: remaining >= savingsTarget ? '#000000' : '#d4d4d8',
+                    }}
+                  />
+                </div>
+                <p className="text-xs font-mono text-zinc-400">
+                  {remaining >= savingsTarget
+                    ? `en meta · te sobran ${fmt(remaining - savingsTarget)}`
+                    : `te faltan ${fmt(Math.max(0, savingsTarget - remaining))} para la meta`
+                  }
+                </p>
+              </div>
             </div>
           )}
+
         </div>
       )}
     </div>
