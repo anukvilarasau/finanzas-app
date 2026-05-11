@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { CATEGORY_MAP } from '../data/categories'
 
 export const DEFAULT_BUDGET_RULES = [
   { id: 'r1', label: 'Necesidades', pct: 50, color: '#10b981', trackAs: 'necesidad' },
@@ -36,12 +35,8 @@ export function useExpenses(userId) {
         supabase.from('settings').select('income').eq('user_id', userId).single(),
       ])
 
-      // Derive type from category since it's not stored in Supabase
       if (expensesData) {
-        setExpenses(expensesData.map(e => ({
-          ...e,
-          type: CATEGORY_MAP[e.category]?.type ?? 'deseo',
-        })))
+        setExpenses(expensesData)
       }
       if (settingsData) setIncomeState(settingsData.income)
 
@@ -59,12 +54,7 @@ export function useExpenses(userId) {
               date: e.date,
             }))
             const { data: migrated } = await supabase.from('expenses').insert(toInsert).select()
-            if (migrated) {
-              setExpenses(migrated.map(e => ({
-                ...e,
-                type: CATEGORY_MAP[e.category]?.type ?? 'deseo',
-              })))
-            }
+            if (migrated) setExpenses(migrated)
           }
           if (local.income > 0) {
             await supabase.from('settings').upsert({ user_id: userId, income: local.income })
@@ -92,17 +82,14 @@ export function useExpenses(userId) {
       .insert({
         user_id: userId,
         amount: expense.amount,
-        category: expense.category,
+        category: 'gasto',
         description: expense.description,
         date: expense.date,
       })
       .select()
       .single()
     if (data) {
-      setExpenses(prev => [{
-        ...data,
-        type: CATEGORY_MAP[data.category]?.type ?? 'deseo',
-      }, ...prev])
+      setExpenses(prev => [data, ...prev])
     }
   }
 

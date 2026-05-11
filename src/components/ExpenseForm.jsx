@@ -1,32 +1,25 @@
 import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 
-export default function ExpenseForm({ addExpense, budgetRules }) {
+export default function ExpenseForm({ addExpense }) {
   const today = new Date().toISOString().split('T')[0]
-  const [form, setForm] = useState({ amount: '', ruleId: '', description: '', date: today })
+  const [form, setForm] = useState({ amount: '', description: '', date: today })
   const [success, setSuccess] = useState(false)
-
-  const selectedRule = form.ruleId ? budgetRules.find(r => r.id === form.ruleId) : null
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!form.amount || !form.ruleId) return
-
-    // type: use trackAs for built-in rules, or the rule.id for custom ones
-    const type = selectedRule?.trackAs || selectedRule?.id || 'deseo'
+    if (!form.amount) return
 
     addExpense({
       amount: Number(form.amount),
-      category: form.ruleId,   // store rule id in category for retrieval
       description: form.description,
       date: form.date,
-      type,
     })
 
     setSuccess(true)
     setTimeout(() => {
       setSuccess(false)
-      setForm({ amount: '', ruleId: '', description: '', date: today })
+      setForm({ amount: '', description: '', date: today })
     }, 1500)
   }
 
@@ -67,34 +60,6 @@ export default function ExpenseForm({ addExpense, budgetRules }) {
           </div>
         </div>
 
-        {/* Budget rule selection */}
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-          <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-4">category</label>
-          <div className="grid grid-cols-2 gap-2">
-            {budgetRules.map(rule => {
-              const selected = form.ruleId === rule.id
-              return (
-                <button
-                  key={rule.id}
-                  type="button"
-                  onClick={() => setForm(f => ({ ...f, ruleId: rule.id }))}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-mono transition-all border text-left"
-                  style={selected
-                    ? { backgroundColor: rule.color + '15', borderColor: rule.color, color: rule.color }
-                    : { borderColor: '#e4e4e7', color: '#a1a1aa' }
-                  }
-                >
-                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: selected ? rule.color : '#d4d4d8' }} />
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{rule.label}</p>
-                    <p className="text-xs opacity-70">{rule.pct}% del ingreso</p>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
         {/* Description + Date */}
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-4">
           <div>
@@ -117,7 +82,7 @@ export default function ExpenseForm({ addExpense, budgetRules }) {
         </div>
 
         <button
-          type="submit" disabled={!form.amount || !form.ruleId}
+          type="submit" disabled={!form.amount}
           className="w-full bg-black hover:bg-zinc-800 disabled:opacity-20 disabled:cursor-not-allowed text-white font-mono font-bold py-3.5 rounded-xl transition-colors text-sm"
         >
           add_expense()
