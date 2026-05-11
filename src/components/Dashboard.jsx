@@ -84,30 +84,6 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
       </div>
 
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard
-          label="gastos_mes"
-          value={fmt(totalSpent)}
-          sub={income > 0 ? `${((totalSpent / income) * 100).toFixed(0)}%_ingreso` : '—'}
-          icon={<TrendingDown className="text-zinc-400" size={15} />}
-          valueColor="text-black"
-        />
-        <StatCard
-          label="presupuesto_gasto"
-          value={income > 0 ? fmt(spendBudget) : '—'}
-          sub={income > 0 ? `${spendPct}%_del_ingreso` : '—'}
-          icon={<TrendingUp className="text-zinc-400" size={15} />}
-          valueColor="text-black"
-        />
-        <StatCard
-          label="disponible"
-          value={income > 0 ? fmt(Math.max(0, remaining)) : '—'}
-          sub={income > 0 ? (remaining >= totalSavingsTarget ? 'metas_cubiertas ✓' : `falta: ${fmt(Math.max(0, totalSavingsTarget - remaining))}`) : '—'}
-          icon={<TrendingUp className={income > 0 && remaining >= totalSavingsTarget ? 'text-black' : 'text-zinc-300'} size={15} />}
-          valueColor={income > 0 && remaining >= totalSavingsTarget ? 'text-black' : 'text-zinc-400'}
-        />
-      </div>
 
       {/* Gastar card */}
       {income > 0 && (
