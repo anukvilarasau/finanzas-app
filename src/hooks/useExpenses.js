@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
 export const DEFAULT_BUDGET_RULES = [
-  { id: 'r1', label: 'Necesidades', pct: 50, color: '#10b981', trackAs: 'necesidad' },
-  { id: 'r2', label: 'Deseos',      pct: 30, color: '#3b82f6', trackAs: 'deseo' },
-  { id: 'r3', label: 'Ahorro',      pct: 20, color: '#a855f7', trackAs: 'savings' },
+  { id: 'r1', label: 'Gastar',    pct: 70, color: '#52525b', trackAs: null },
+  { id: 'r2', label: 'Ahorro',    pct: 20, color: '#000000', trackAs: 'ahorro' },
+  { id: 'r3', label: 'Inversión', pct: 10, color: '#a1a1aa', trackAs: 'inversion' },
 ]
 
 const BUDGET_KEY = 'finanzas_budget_rules'
