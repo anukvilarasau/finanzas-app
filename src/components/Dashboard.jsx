@@ -67,8 +67,7 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="text-xs text-zinc-400 font-mono uppercase tracking-widest mb-1">// overview</p>
-          <h2 className="text-2xl font-bold text-black capitalize tracking-tight">{monthName}</h2>
+          <p className="text-xs text-zinc-400 font-mono uppercase tracking-widest">// overview</p>
         </div>
 
         <div className="bg-white border border-zinc-200 rounded-xl p-4 min-w-52 shadow-sm">
