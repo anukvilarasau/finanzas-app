@@ -83,33 +83,6 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
         </div>
       </div>
 
-      {/* Alerts */}
-      {income > 0 && (isOverspending || isLowSavings) && (
-        <div className="space-y-2">
-          {isOverspending && (
-            <div className="border border-black rounded-xl p-4 flex items-center gap-3 bg-white shadow-sm">
-              <AlertTriangle className="text-black shrink-0" size={17} />
-              <div>
-                <p className="text-black font-mono text-sm font-semibold">overspending_detected()</p>
-                <p className="text-zinc-500 text-xs font-mono mt-0.5">
-                  Gastaste {fmt(totalSpent)} de un presupuesto de {fmt(spendBudget)} — excedido por {fmt(totalSpent - spendBudget)}
-                </p>
-              </div>
-            </div>
-          )}
-          {isLowSavings && (
-            <div className="border border-zinc-300 rounded-xl p-4 flex items-center gap-3 bg-white shadow-sm">
-              <TrendingDown className="text-zinc-500 shrink-0" size={17} />
-              <div>
-                <p className="text-black font-mono text-sm font-semibold">low_savings_warning()</p>
-                <p className="text-zinc-500 text-xs font-mono mt-0.5">
-                  Te quedan {fmt(remaining)} pero necesitás {fmt(totalSavingsTarget)} para cubrir ahorro e inversión.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
