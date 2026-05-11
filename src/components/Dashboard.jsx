@@ -5,8 +5,8 @@ import { CATEGORIES, CATEGORY_MAP } from '../data/categories'
 import { analyzeFinances, getMonthExpenses, fmt } from '../utils/finance'
 
 const PRESET_COLORS = [
-  '#10b981','#3b82f6','#a855f7','#f59e0b','#ec4899',
-  '#f97316','#06b6d4','#84cc16','#14b8a6','#64748b','#ef4444','#8b5cf6',
+  '#ffffff','#a1a1aa','#71717a','#10b981','#3b82f6',
+  '#a855f7','#f59e0b','#ec4899','#f97316','#06b6d4','#84cc16','#ef4444',
 ]
 
 function getRuleActual(rule, analysis) {
@@ -18,27 +18,18 @@ function getRuleActual(rule, analysis) {
 
 function buildRecommendations(budgetRules, analysis, income) {
   if (income === 0) return ['Configurá tu ingreso mensual para recibir recomendaciones personalizadas.']
-
-  return budgetRules
-    .filter(r => r.trackAs)
-    .map(rule => {
-      const actual = getRuleActual(rule, analysis)
-      const target = income * (rule.pct / 100)
-
-      if (rule.trackAs === 'savings') {
-        if (actual >= target) {
-          return `${rule.label}: ahorraste ${fmt(actual)} (${((actual / income) * 100).toFixed(0)}%). Considerá invertir el 60% y guardar el 40% como fondo de emergencia.`
-        } else {
-          return `${rule.label}: te faltan ${fmt(target - actual)} para tu meta del ${rule.pct}%. Reducí otros gastos para llegar a ${fmt(target)}.`
-        }
-      } else {
-        if (actual > target) {
-          return `${rule.label}: excediste el límite en ${fmt(actual - target)}. Tu meta es ${fmt(target)} (${rule.pct}% de tu ingreso).`
-        } else {
-          return `${rule.label}: bajo control. Tenés ${fmt(target - actual)} de margen (meta: ${fmt(target)}).`
-        }
-      }
-    })
+  return budgetRules.filter(r => r.trackAs).map(rule => {
+    const actual = getRuleActual(rule, analysis)
+    const target = income * (rule.pct / 100)
+    if (rule.trackAs === 'savings') {
+      return actual >= target
+        ? `${rule.label}: ahorraste ${fmt(actual)} (${((actual/income)*100).toFixed(0)}%). Considerá invertir el 60% y guardar el 40% como fondo de emergencia.`
+        : `${rule.label}: te faltan ${fmt(target - actual)} para tu meta del ${rule.pct}%. Reducí otros gastos para llegar a ${fmt(target)}.`
+    }
+    return actual > target
+      ? `${rule.label}: excediste el límite en ${fmt(actual - target)}. Tu meta es ${fmt(target)} (${rule.pct}% de tu ingreso).`
+      : `${rule.label}: bajo control. Tenés ${fmt(target - actual)} de margen (meta: ${fmt(target)}).`
+  })
 }
 
 export default function Dashboard({ income, expenses, budgetRules, setIncome, setBudgetRules }) {
@@ -54,6 +45,7 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
   const savingsRule = budgetRules.find(r => r.trackAs === 'savings')
   const savingsPct = savingsRule?.pct ?? 20
   const savingsTarget = income * (savingsPct / 100)
+  const savingsOk = income > 0 && analysis.savings >= savingsTarget
 
   const categoryTotals = CATEGORIES
     .map(cat => ({
@@ -74,39 +66,40 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-5">
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-2xl font-bold text-slate-100 capitalize">{monthName}</h2>
-          <p className="text-slate-400 text-sm mt-1">Tu panorama financiero</p>
+          <p className="text-xs text-zinc-600 font-mono uppercase tracking-widest mb-1">// overview</p>
+          <h2 className="text-2xl font-bold text-white capitalize tracking-tight">{monthName}</h2>
         </div>
 
         {/* Income card */}
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 min-w-56">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 min-w-52">
           {editingIncome ? (
             <div className="flex gap-2 items-center">
-              <span className="text-slate-400 text-sm">$</span>
+              <span className="text-zinc-600 font-mono text-sm">$</span>
               <input
                 autoFocus
                 type="number"
-                placeholder="Ingreso mensual"
+                placeholder="0"
                 value={incomeInput}
                 onChange={e => setIncomeInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSaveIncome()}
-                className="flex-1 bg-slate-700 text-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none border border-slate-600 focus:border-emerald-500 w-36"
+                className="flex-1 bg-black text-white rounded-lg px-3 py-1.5 text-sm font-mono outline-none border border-zinc-700 focus:border-white w-32 transition-colors"
               />
-              <button onClick={handleSaveIncome} className="bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors">OK</button>
-              <button onClick={() => setEditingIncome(false)} className="text-slate-500 hover:text-slate-300"><X size={15} /></button>
+              <button onClick={handleSaveIncome} className="bg-white hover:bg-zinc-200 text-black px-3 py-1.5 rounded-lg text-sm font-mono font-semibold transition-colors">OK</button>
+              <button onClick={() => setEditingIncome(false)} className="text-zinc-600 hover:text-white"><X size={14} /></button>
             </div>
           ) : (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-400 mb-1">Ingreso mensual</p>
-                <p className="text-xl font-bold text-emerald-400">{income > 0 ? fmt(income) : 'Sin configurar'}</p>
+                <p className="text-xs text-zinc-600 font-mono mb-1">ingreso_mensual</p>
+                <p className="text-xl font-mono font-bold text-white">{income > 0 ? fmt(income) : '—'}</p>
               </div>
-              <button onClick={() => { setEditingIncome(true); setIncomeInput(income > 0 ? String(income) : '') }} className="text-slate-500 hover:text-emerald-400 transition-colors">
-                <Edit3 size={15} />
+              <button onClick={() => { setEditingIncome(true); setIncomeInput(income > 0 ? String(income) : '') }} className="text-zinc-700 hover:text-white transition-colors">
+                <Edit3 size={14} />
               </button>
             </div>
           )}
@@ -115,56 +108,55 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
 
       {/* Income prompt */}
       {income === 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 flex items-center gap-4">
-          <AlertCircle className="text-amber-400 shrink-0" size={22} />
+        <div className="border border-zinc-800 rounded-xl p-4 flex items-center gap-4 bg-zinc-950">
+          <AlertCircle className="text-zinc-500 shrink-0" size={18} />
           <div className="flex-1">
-            <p className="text-amber-300 font-semibold text-sm">Configurá tu ingreso mensual</p>
-            <p className="text-amber-400/70 text-xs mt-0.5">Necesito saber cuánto ganás para analizar tu situación financiera.</p>
+            <p className="text-white font-mono text-sm font-semibold">income not configured</p>
+            <p className="text-zinc-600 text-xs font-mono mt-0.5">Set your monthly income to unlock financial analysis.</p>
           </div>
-          <button onClick={() => setEditingIncome(true)} className="bg-amber-500 hover:bg-amber-400 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shrink-0">Configurar</button>
+          <button onClick={() => setEditingIncome(true)} className="bg-white hover:bg-zinc-200 text-black px-4 py-2 rounded-lg text-xs font-mono font-semibold transition-colors shrink-0">
+            set_income()
+          </button>
         </div>
       )}
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
         <StatCard
-          label="Gastos del mes"
+          label="gastos_mes"
           value={fmt(analysis.total)}
-          sub={income > 0 ? `${((analysis.total / income) * 100).toFixed(0)}% de tu ingreso` : '—'}
-          valueColor="text-red-400"
-          icon={<TrendingDown className="text-red-400" size={18} />}
+          sub={income > 0 ? `${((analysis.total / income) * 100).toFixed(0)}%_ingreso` : '—'}
+          icon={<TrendingDown className="text-zinc-500" size={15} />}
+          valueColor="text-white"
         />
         <StatCard
-          label="Ahorro del mes"
+          label="ahorro_mes"
           value={income > 0 ? fmt(analysis.savings) : '—'}
-          sub={income > 0 ? `${analysis.savingsPct.toFixed(0)}% de tu ingreso` : '—'}
-          valueColor={analysis.savingsOk ? 'text-emerald-400' : 'text-amber-400'}
-          icon={<TrendingUp className={analysis.savingsOk ? 'text-emerald-400' : 'text-amber-400'} size={18} />}
+          sub={income > 0 ? `${analysis.savingsPct.toFixed(0)}%_ingreso` : '—'}
+          icon={<TrendingUp className={savingsOk ? 'text-white' : 'text-zinc-600'} size={15} />}
+          valueColor={savingsOk ? 'text-white' : 'text-zinc-500'}
         />
         <StatCard
-          label={`Meta de ahorro (${savingsPct}%)`}
+          label={`meta_ahorro_${savingsPct}%`}
           value={income > 0 ? fmt(savingsTarget) : '—'}
-          sub={income > 0 ? (analysis.savings >= savingsTarget ? 'Meta cumplida' : `Faltan ${fmt(Math.max(0, savingsTarget - analysis.savings))}`) : '—'}
-          valueColor={analysis.savings >= savingsTarget ? 'text-emerald-400' : 'text-amber-400'}
-          icon={<DollarSign className={analysis.savings >= savingsTarget ? 'text-emerald-400' : 'text-amber-400'} size={18} />}
+          sub={income > 0 ? (savingsOk ? 'TARGET_MET ✓' : `deficit: ${fmt(Math.max(0, savingsTarget - analysis.savings))}`) : '—'}
+          icon={<DollarSign className={savingsOk ? 'text-white' : 'text-zinc-600'} size={15} />}
+          valueColor={savingsOk ? 'text-white' : 'text-zinc-500'}
         />
       </div>
 
-      {/* Budget distribution analysis */}
+      {/* Distribution analysis */}
       {income > 0 && (
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="text-base font-bold text-slate-100">Distribución del ingreso</h3>
-              <p className="text-slate-400 text-xs mt-0.5">Comparación con tu distribución ideal</p>
+              <p className="text-xs text-zinc-600 font-mono uppercase tracking-widest mb-1">// budget_distribution</p>
+              <h3 className="text-sm font-semibold text-white">Distribución del ingreso</h3>
             </div>
             {!editingBudget && (
-              <button
-                onClick={() => setEditingBudget(true)}
-                className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 transition-colors"
-              >
-                <Settings size={13} />
-                Personalizar
+              <button onClick={() => setEditingBudget(true)} className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-white font-mono transition-colors">
+                <Settings size={12} />
+                edit
               </button>
             )}
           </div>
@@ -176,7 +168,7 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
               onCancel={() => setEditingBudget(false)}
             />
           ) : (
-            <div className="space-y-5">
+            <div className="space-y-4">
               {budgetRules.map(rule => {
                 const actual = getRuleActual(rule, analysis)
                 const target = income * (rule.pct / 100)
@@ -200,49 +192,47 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
         </div>
       )}
 
-      {/* Bottom grid: recommendations + pie */}
+      {/* Recommendations + Pie */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
-          <h3 className="text-base font-bold text-slate-100 mb-4">Recomendaciones</h3>
-          <div className="space-y-4">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
+          <p className="text-xs text-zinc-600 font-mono uppercase tracking-widest mb-4">// recommendations</p>
+          <div className="space-y-3">
             {recommendations.map((rec, i) => (
-              <div key={i} className="flex items-start gap-3 text-sm text-slate-300 leading-relaxed">
-                <div className="w-5 h-5 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-emerald-400 text-xs font-bold">{i + 1}</span>
-                </div>
+              <div key={i} className="flex items-start gap-3 text-sm text-zinc-300 leading-relaxed">
+                <span className="text-zinc-700 font-mono text-xs shrink-0 mt-0.5">{String(i + 1).padStart(2, '0')}.</span>
                 <span>{rec}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
-          <h3 className="text-base font-bold text-slate-100 mb-4">Por categoría — este mes</h3>
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
+          <p className="text-xs text-zinc-600 font-mono uppercase tracking-widest mb-4">// by_category</p>
           {categoryTotals.length > 0 ? (
             <div className="flex items-center gap-4">
-              <ResponsiveContainer width={130} height={130}>
+              <ResponsiveContainer width={120} height={120}>
                 <PieChart>
-                  <Pie data={categoryTotals} cx="50%" cy="50%" innerRadius={38} outerRadius={58} dataKey="value" strokeWidth={0}>
+                  <Pie data={categoryTotals} cx="50%" cy="50%" innerRadius={34} outerRadius={54} dataKey="value" strokeWidth={0}>
                     {categoryTotals.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                   </Pie>
-                  <Tooltip formatter={v => [fmt(v), 'Total']} contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px', color: '#f1f5f9', fontSize: '12px' }} />
+                  <Tooltip formatter={v => [fmt(v), 'Total']} contentStyle={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '8px', color: '#fff', fontSize: '11px', fontFamily: 'monospace' }} />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-1.5">
                 {categoryTotals.map((cat, i) => (
                   <div key={i} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                      <span className="text-slate-400 truncate">{cat.name}</span>
+                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                      <span className="text-zinc-500 truncate font-mono">{cat.name}</span>
                     </div>
-                    <span className="text-slate-300 font-medium ml-2 shrink-0">{fmt(cat.value)}</span>
+                    <span className="text-zinc-300 font-mono ml-2 shrink-0">{fmt(cat.value)}</span>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-32 text-slate-600">
-              <p className="text-sm">Sin gastos este mes</p>
+            <div className="flex items-center justify-center h-28">
+              <p className="text-zinc-700 font-mono text-xs">no_data[]</p>
             </div>
           )}
         </div>
@@ -258,101 +248,67 @@ function BudgetEditor({ rules, onSave, onCancel }) {
   const total = draft.reduce((s, r) => s + Number(r.pct || 0), 0)
   const valid = total === 100 && draft.every(r => r.label.trim() && Number(r.pct) > 0)
 
-  const update = (id, field, value) =>
-    setDraft(d => d.map(r => r.id === id ? { ...r, [field]: value } : r))
-
-  const add = () =>
-    setDraft(d => [...d, {
-      id: crypto.randomUUID(),
-      label: '',
-      pct: 0,
-      color: PRESET_COLORS[d.length % PRESET_COLORS.length],
-      trackAs: null,
-    }])
-
+  const update = (id, field, value) => setDraft(d => d.map(r => r.id === id ? { ...r, [field]: value } : r))
+  const add = () => setDraft(d => [...d, { id: crypto.randomUUID(), label: '', pct: 0, color: PRESET_COLORS[d.length % PRESET_COLORS.length], trackAs: null }])
   const remove = (id) => setDraft(d => d.filter(r => r.id !== id))
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {draft.map(rule => (
         <div key={rule.id} className="flex items-center gap-2">
-          {/* Color */}
           <div className="relative">
             <button
               onClick={() => setShowColorFor(showColorFor === rule.id ? null : rule.id)}
-              className="w-7 h-7 rounded-full border-2 border-slate-600 shrink-0 hover:scale-110 transition-transform"
+              className="w-6 h-6 rounded border border-zinc-700 shrink-0 hover:scale-110 transition-transform"
               style={{ backgroundColor: rule.color }}
             />
             {showColorFor === rule.id && (
-              <div className="absolute left-0 top-9 z-10 bg-slate-700 rounded-xl p-2 grid grid-cols-6 gap-1 shadow-xl border border-slate-600">
+              <div className="absolute left-0 top-8 z-10 bg-zinc-900 rounded-lg p-2 grid grid-cols-6 gap-1 shadow-xl border border-zinc-800">
                 {PRESET_COLORS.map(c => (
-                  <button
-                    key={c}
-                    onClick={() => { update(rule.id, 'color', c); setShowColorFor(null) }}
-                    className="w-5 h-5 rounded-full hover:scale-125 transition-transform"
-                    style={{ backgroundColor: c }}
-                  />
+                  <button key={c} onClick={() => { update(rule.id, 'color', c); setShowColorFor(null) }}
+                    className="w-5 h-5 rounded hover:scale-125 transition-transform border border-zinc-700"
+                    style={{ backgroundColor: c }} />
                 ))}
               </div>
             )}
           </div>
-
-          {/* Label */}
           <input
             value={rule.label}
             onChange={e => update(rule.id, 'label', e.target.value)}
-            placeholder="Nombre"
-            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500"
+            placeholder="nombre"
+            className="flex-1 bg-black border border-zinc-800 rounded-lg px-3 py-1.5 text-sm text-white font-mono focus:outline-none focus:border-zinc-500 placeholder:text-zinc-700"
           />
-
-          {/* Percentage */}
           <div className="flex items-center gap-1">
             <input
-              type="number"
-              min="1"
-              max="100"
+              type="number" min="1" max="100"
               value={rule.pct}
               onChange={e => update(rule.id, 'pct', Number(e.target.value))}
-              className="w-14 bg-slate-700 border border-slate-600 rounded-lg px-2 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 text-center"
+              className="w-12 bg-black border border-zinc-800 rounded-lg px-2 py-1.5 text-sm text-white font-mono focus:outline-none focus:border-zinc-500 text-center"
             />
-            <span className="text-slate-400 text-sm">%</span>
+            <span className="text-zinc-600 font-mono text-xs">%</span>
           </div>
-
-          {/* Delete */}
-          <button
-            onClick={() => remove(rule.id)}
-            disabled={draft.length <= 1}
-            className="text-slate-600 hover:text-red-400 disabled:opacity-30 transition-colors"
-          >
-            <Trash2 size={15} />
+          <button onClick={() => remove(rule.id)} disabled={draft.length <= 1} className="text-zinc-700 hover:text-red-500 disabled:opacity-20 transition-colors">
+            <Trash2 size={14} />
           </button>
         </div>
       ))}
 
       <div className="flex items-center justify-between pt-1">
-        <button onClick={add} className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 text-sm transition-colors">
-          <Plus size={14} />
-          Agregar categoría
+        <button onClick={add} className="flex items-center gap-1.5 text-zinc-500 hover:text-white text-xs font-mono transition-colors">
+          <Plus size={13} />add_category()
         </button>
-        <span className={`text-sm font-semibold ${total === 100 ? 'text-emerald-400' : 'text-red-400'}`}>
-          Total: {total}%
+        <span className={`text-xs font-mono font-semibold ${total === 100 ? 'text-white' : 'text-red-500'}`}>
+          total: {total}%
         </span>
       </div>
-
-      {total !== 100 && (
-        <p className="text-xs text-red-400">Los porcentajes deben sumar exactamente 100%</p>
-      )}
+      {total !== 100 && <p className="text-xs text-red-500 font-mono">// must equal 100%</p>}
 
       <div className="flex gap-2 pt-1">
-        <button
-          onClick={() => onSave(draft)}
-          disabled={!valid}
-          className="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
-        >
-          Guardar
+        <button onClick={() => onSave(draft)} disabled={!valid} className="flex-1 bg-white hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed text-black font-mono font-semibold py-2 rounded-lg text-sm transition-colors">
+          save()
         </button>
-        <button onClick={onCancel} className="px-5 py-2.5 text-slate-400 hover:text-slate-200 text-sm rounded-xl hover:bg-slate-700 transition-colors">
-          Cancelar
+        <button onClick={onCancel} className="px-4 py-2 text-zinc-600 hover:text-white text-sm font-mono rounded-lg hover:bg-zinc-900 transition-colors">
+          cancel
         </button>
       </div>
     </div>
@@ -361,13 +317,13 @@ function BudgetEditor({ rules, onSave, onCancel }) {
 
 function StatCard({ label, value, sub, valueColor, icon }) {
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-slate-400 font-medium">{label}</p>
+    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs text-zinc-600 font-mono truncate mr-2">{label}</p>
         {icon}
       </div>
-      <p className={`text-2xl font-bold ${valueColor}`}>{value}</p>
-      {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
+      <p className={`text-xl font-mono font-bold ${valueColor}`}>{value}</p>
+      {sub && <p className="text-xs text-zinc-600 font-mono mt-1 truncate">{sub}</p>}
     </div>
   )
 }
@@ -375,35 +331,28 @@ function StatCard({ label, value, sub, valueColor, icon }) {
 function AnalysisBar({ label, actual, recommended, color, over, isInverse, tracked }) {
   const pct = recommended > 0 ? Math.min((actual / recommended) * 100, 100) : 0
   const ok = isInverse ? actual >= recommended : !over
+  const barColor = over && !isInverse ? '#ef4444' : color
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center text-sm">
-        <span className="text-slate-300 font-medium">{label}</span>
+    <div className="space-y-1.5">
+      <div className="flex justify-between items-center text-xs">
+        <span className="text-zinc-400 font-mono">{label}</span>
         <div className="flex items-center gap-2">
           {tracked ? (
             <>
-              <span className={over && !isInverse ? 'text-red-400 font-semibold' : 'text-slate-200 font-semibold'}>
-                {fmt(actual)}
-              </span>
-              <span className="text-slate-500 text-xs">/ {fmt(recommended)}</span>
-              {ok
-                ? <CheckCircle size={13} className="text-emerald-400" />
-                : <AlertCircle size={13} className="text-red-400" />
-              }
+              <span className={`font-mono font-semibold ${over && !isInverse ? 'text-red-500' : 'text-white'}`}>{fmt(actual)}</span>
+              <span className="text-zinc-700 font-mono">/ {fmt(recommended)}</span>
+              {ok ? <CheckCircle size={11} className="text-white" /> : <AlertCircle size={11} className="text-red-500" />}
             </>
           ) : (
-            <span className="text-slate-400 text-xs">Meta: {fmt(recommended)}</span>
+            <span className="text-zinc-600 font-mono">target: {fmt(recommended)}</span>
           )}
         </div>
       </div>
-      <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-700"
-          style={{
-            width: tracked ? `${pct}%` : '0%',
-            backgroundColor: over && !isInverse ? '#ef4444' : color,
-          }}
+          style={{ width: tracked ? `${pct}%` : '0%', backgroundColor: barColor }}
         />
       </div>
     </div>

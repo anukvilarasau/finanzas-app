@@ -27,76 +27,77 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black tech-grid flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
+
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-            <Wallet size={22} className="text-white" />
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+            <Wallet size={18} className="text-black" />
           </div>
           <div>
-            <h1 className="font-bold text-slate-100 text-xl">FinanzasPro</h1>
-            <p className="text-xs text-slate-400">Control inteligente</p>
+            <h1 className="font-mono font-bold text-white text-lg leading-none">FinanzasPro</h1>
+            <p className="text-xs text-zinc-600 font-mono mt-0.5">personal finance tracker</p>
           </div>
         </div>
 
-        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
           {sent ? (
-            <div className="text-center py-4">
-              <p className="text-emerald-400 font-semibold mb-2">Revisá tu email</p>
-              <p className="text-slate-400 text-sm">Te mandamos un link de confirmación a <span className="text-slate-200">{email}</span>. Hacé click en el link y después volvé acá.</p>
-              <button onClick={() => { setSent(false); setMode('login') }} className="mt-4 text-emerald-400 text-sm hover:text-emerald-300">
-                Volver al login
+            <div className="text-center py-4 space-y-3">
+              <p className="text-white font-mono font-semibold">// check your email</p>
+              <p className="text-zinc-500 text-sm font-mono">Confirmation link sent to<br /><span className="text-zinc-300">{email}</span></p>
+              <button onClick={() => { setSent(false); setMode('login') }} className="text-zinc-500 hover:text-white text-sm font-mono transition-colors">
+                ← back to login
               </button>
             </div>
           ) : (
             <>
-              <h2 className="text-slate-100 font-semibold text-lg mb-5">
-                {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
-              </h2>
+              <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest mb-5">
+                {mode === 'login' ? '// sign in' : '// create account'}
+              </p>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Email</label>
+                  <label className="block text-xs text-zinc-600 font-mono mb-1.5">email</label>
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-xl px-4 py-3 text-slate-100 text-sm focus:outline-none focus:border-emerald-500"
-                    placeholder="tu@email.com"
+                    className="w-full bg-black border border-zinc-800 rounded-lg px-3 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-zinc-500 placeholder:text-zinc-700 transition-colors"
+                    placeholder="user@domain.com"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Contraseña</label>
+                  <label className="block text-xs text-zinc-600 font-mono mb-1.5">password</label>
                   <input
                     type="password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-xl px-4 py-3 text-slate-100 text-sm focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-black border border-zinc-800 rounded-lg px-3 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-zinc-500 placeholder:text-zinc-700 transition-colors"
                     placeholder="••••••••"
                     required
                     minLength={6}
                   />
                 </div>
 
-                {error && <p className="text-red-400 text-xs">{error}</p>}
+                {error && <p className="text-red-500 text-xs font-mono">error: {error}</p>}
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
+                  className="w-full bg-white hover:bg-zinc-200 disabled:opacity-40 text-black font-mono font-semibold py-2.5 rounded-lg transition-colors text-sm mt-1"
                 >
-                  {loading ? 'Cargando...' : mode === 'login' ? 'Entrar' : 'Registrarme'}
+                  {loading ? 'loading...' : mode === 'login' ? 'sign_in()' : 'register()'}
                 </button>
               </form>
 
-              <p className="text-center text-slate-500 text-sm mt-4">
-                {mode === 'login' ? '¿No tenés cuenta?' : '¿Ya tenés cuenta?'}{' '}
+              <p className="text-center text-zinc-700 text-xs font-mono mt-4">
+                {mode === 'login' ? 'no account?' : 'have account?'}{' '}
                 <button
                   onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
-                  className="text-emerald-400 hover:text-emerald-300 font-medium"
+                  className="text-zinc-400 hover:text-white transition-colors"
                 >
-                  {mode === 'login' ? 'Registrate' : 'Iniciá sesión'}
+                  {mode === 'login' ? 'register →' : 'sign in →'}
                 </button>
               </p>
             </>
