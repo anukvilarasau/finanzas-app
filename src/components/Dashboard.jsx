@@ -17,7 +17,7 @@ function getRuleActual(rule, analysis, monthExpenses) {
   return monthExpenses.filter(e => e.category === rule.id).reduce((s, e) => s + e.amount, 0)
 }
 
-function buildRecommendations(budgetRules, analysis, income) {
+function buildRecommendations(budgetRules, analysis, income, monthExpenses) {
   if (income === 0) return ['Configurá tu ingreso mensual para recibir recomendaciones personalizadas.']
   return budgetRules.filter(r => r.trackAs).map(rule => {
     const actual = getRuleActual(rule, analysis, monthExpenses)
@@ -41,7 +41,7 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
   const now = new Date()
   const monthExpenses = getMonthExpenses(expenses, now.getFullYear(), now.getMonth())
   const analysis = analyzeFinances(income, monthExpenses)
-  const recommendations = buildRecommendations(budgetRules, analysis, income)
+  const recommendations = buildRecommendations(budgetRules, analysis, income, monthExpenses)
 
   const savingsRule = budgetRules.find(r => r.trackAs === 'savings')
   const savingsPct = savingsRule?.pct ?? 20
