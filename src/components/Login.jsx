@@ -10,6 +10,16 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
 
+  const handleGoogle = async () => {
+    setLoading(true)
+    setError('')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: 'https://finanzas-app-tau-khaki.vercel.app' }
+    })
+    if (error) { setError(error.message); setLoading(false) }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -56,6 +66,21 @@ export default function Login() {
               <p className="text-zinc-400 text-xs font-mono uppercase tracking-widest mb-5">
                 {mode === 'login' ? '// sign in' : '// create account'}
               </p>
+
+              <button
+                type="button" onClick={handleGoogle} disabled={loading}
+                className="w-full flex items-center justify-center gap-3 border border-zinc-200 hover:border-zinc-400 bg-white hover:bg-zinc-50 text-black font-mono text-sm py-2.5 rounded-lg transition-colors disabled:opacity-40 mb-4"
+              >
+                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M47.5 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h13.2c-.6 3-2.3 5.5-4.9 7.2v6h7.9c4.6-4.3 7.3-10.6 7.3-17.3z"/><path fill="#34A853" d="M24 48c6.5 0 12-2.1 16-5.8l-7.9-6c-2.1 1.4-4.9 2.3-8.1 2.3-6.2 0-11.5-4.2-13.4-9.9H2.5v6.2C6.5 42.8 14.7 48 24 48z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-2.9-.8-4.6s.3-3.2.8-4.6v-6.2H2.5C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.8l8.1-6.2z"/><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.7 0 6.5 5.2 2.5 13.2l8.1 6.2C12.5 13.7 17.8 9.5 24 9.5z"/></svg>
+                Continuar con Google
+              </button>
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-zinc-100" />
+                <span className="text-zinc-300 text-xs font-mono">o</span>
+                <div className="flex-1 h-px bg-zinc-100" />
+              </div>
+
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
                   <label className="block text-xs text-zinc-400 font-mono mb-1.5">email</label>
