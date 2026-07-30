@@ -135,7 +135,7 @@ export default function App() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto tech-grid">
+        <main className="flex-1 overflow-auto bg-zinc-50/60">
           {content}
         </main>
       </div>
