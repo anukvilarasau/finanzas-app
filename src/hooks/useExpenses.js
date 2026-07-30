@@ -9,10 +9,18 @@ export const DEFAULT_BUDGET_RULES = [
 
 const BUDGET_KEY = 'finanzas_budget_rules'
 
+function migrateLegacyTrackAs(trackAs) {
+  if (trackAs === 'necesidad' || trackAs === 'deseo') return null
+  if (trackAs === 'savings') return 'ahorro'
+  return trackAs
+}
+
 function loadBudgetRules() {
   try {
     const raw = localStorage.getItem(BUDGET_KEY)
-    return raw ? JSON.parse(raw) : DEFAULT_BUDGET_RULES
+    if (!raw) return DEFAULT_BUDGET_RULES
+    const rules = JSON.parse(raw)
+    return rules.map(r => ({ ...r, trackAs: migrateLegacyTrackAs(r.trackAs) }))
   } catch {
     return DEFAULT_BUDGET_RULES
   }

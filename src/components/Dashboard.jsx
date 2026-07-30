@@ -85,6 +85,19 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
 
 
 
+      {/* Income prompt */}
+      {income === 0 && (
+        <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm flex items-center gap-4">
+          <div className="flex-1">
+            <p className="text-black font-mono text-sm font-semibold mb-1">// ingreso_no_configurado</p>
+            <p className="text-zinc-400 text-xs font-mono">Ingresá tu salario mensual para ver el análisis completo.</p>
+          </div>
+          <button onClick={() => setEditingIncome(true)} className="bg-black hover:bg-zinc-800 text-white px-4 py-2 rounded-lg text-xs font-mono font-semibold transition-colors shrink-0">
+            set_income()
+          </button>
+        </div>
+      )}
+
       {/* Gastar card */}
       {income > 0 && (
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
