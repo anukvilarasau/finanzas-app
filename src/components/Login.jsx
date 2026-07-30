@@ -18,7 +18,10 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) setError(error.message)
     } else {
-      const { error } = await supabase.auth.signUp({ email, password })
+      const { error } = await supabase.auth.signUp({
+        email, password,
+        options: { emailRedirectTo: 'https://finanzas-app-tau-khaki.vercel.app' }
+      })
       if (error) setError(error.message)
       else setSent(true)
     }
