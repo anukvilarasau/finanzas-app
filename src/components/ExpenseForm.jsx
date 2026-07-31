@@ -27,11 +27,11 @@ export default function ExpenseForm({ addExpense }) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 border border-zinc-200 rounded-xl flex items-center justify-center mx-auto">
-            <CheckCircle className="text-black" size={28} />
+          <div className="w-16 h-16 border border-zinc-200 rounded-2xl flex items-center justify-center mx-auto bg-zinc-50">
+            <CheckCircle className="text-zinc-800" size={28} />
           </div>
-          <p className="text-black font-mono font-bold">expense_saved()</p>
-          <p className="text-zinc-400 font-mono text-xs">// record stored successfully</p>
+          <p className="text-zinc-900 font-semibold text-lg">¡Gasto registrado!</p>
+          <p className="text-zinc-400 text-sm">El registro fue guardado correctamente.</p>
         </div>
       </div>
     )
@@ -40,42 +40,40 @@ export default function ExpenseForm({ addExpense }) {
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
       <div className="mb-6">
-        <p className="text-xs text-zinc-400 font-mono uppercase tracking-widest mb-1">// new_expense</p>
-        <h2 className="text-2xl font-bold text-black">Registrar Gasto</h2>
+        <h2 className="text-2xl font-bold text-zinc-900">Registrar gasto</h2>
+        <p className="text-sm text-zinc-400 mt-1">Ingresá el monto y los detalles del gasto.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Amount */}
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-          <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-3">amount</label>
+        <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
+          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">Monto</label>
           <div className="flex items-center gap-2">
-            <span className="text-3xl font-mono font-bold text-zinc-300">$</span>
+            <span className="text-3xl font-bold text-zinc-300">$</span>
             <input
               type="number" placeholder="0" value={form.amount}
               onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-              className="flex-1 bg-transparent text-5xl font-mono font-bold text-black outline-none placeholder:text-zinc-200 w-0"
+              className="flex-1 bg-transparent text-5xl font-bold text-zinc-900 outline-none placeholder:text-zinc-200 w-0"
               required min="0" step="any"
             />
           </div>
         </div>
 
-        {/* Description + Date */}
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm space-y-4">
           <div>
-            <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-2">description</label>
+            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Descripción</label>
             <input
-              type="text" placeholder="optional note..." value={form.description}
+              type="text" placeholder="Ej: supermercado, transporte..." value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              className="w-full bg-zinc-50 border border-zinc-200 text-black rounded-lg px-3 py-2.5 text-sm font-mono outline-none focus:border-black placeholder:text-zinc-300 transition-colors"
+              className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-accent-600 placeholder:text-zinc-300 transition-colors"
             />
           </div>
           <div>
-            <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-2">date</label>
+            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Fecha</label>
             <input
               type="date" value={form.date}
               onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-              className="w-full bg-zinc-50 border border-zinc-200 text-black rounded-lg px-3 py-2.5 text-sm font-mono outline-none focus:border-black transition-colors"
+              className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-accent-600 transition-colors"
               style={{ colorScheme: 'light' }}
             />
           </div>
@@ -83,9 +81,9 @@ export default function ExpenseForm({ addExpense }) {
 
         <button
           type="submit" disabled={!form.amount}
-          className="w-full bg-black hover:bg-zinc-800 disabled:opacity-20 disabled:cursor-not-allowed text-white font-mono font-bold py-3.5 rounded-xl transition-colors text-sm"
+          className="w-full bg-zinc-900 hover:bg-zinc-700 disabled:opacity-20 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-colors text-sm"
         >
-          add_expense()
+          Guardar gasto
         </button>
       </form>
     </div>

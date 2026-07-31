@@ -27,11 +27,11 @@ export default function IncomeForm({ addIncome }) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 border border-accent-200 rounded-xl flex items-center justify-center mx-auto bg-accent-50">
+          <div className="w-16 h-16 border border-accent-200 rounded-2xl flex items-center justify-center mx-auto bg-accent-50">
             <CheckCircle className="text-accent-600" size={28} />
           </div>
-          <p className="text-black font-mono font-bold">income_saved()</p>
-          <p className="text-zinc-400 font-mono text-xs">// record stored successfully</p>
+          <p className="text-zinc-900 font-semibold text-lg">¡Ingreso registrado!</p>
+          <p className="text-zinc-400 text-sm">El registro fue guardado correctamente.</p>
         </div>
       </div>
     )
@@ -40,40 +40,40 @@ export default function IncomeForm({ addIncome }) {
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
       <div className="mb-6">
-        <p className="text-xs text-zinc-400 font-mono uppercase tracking-widest mb-1">// new_income</p>
-        <h2 className="text-2xl font-bold text-black">Registrar Ingreso</h2>
+        <h2 className="text-2xl font-bold text-zinc-900">Registrar ingreso</h2>
+        <p className="text-sm text-zinc-400 mt-1">Ingresá el monto y la fuente del ingreso.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-          <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-3">amount</label>
+        <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
+          <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">Monto</label>
           <div className="flex items-center gap-2">
-            <span className="text-3xl font-mono font-bold text-zinc-300">$</span>
+            <span className="text-3xl font-bold text-zinc-300">$</span>
             <input
               type="number" placeholder="0" value={form.amount}
               onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-              className="flex-1 bg-transparent text-5xl font-mono font-bold text-black outline-none placeholder:text-zinc-200 w-0"
+              className="flex-1 bg-transparent text-5xl font-bold text-zinc-900 outline-none placeholder:text-zinc-200 w-0"
               required min="0" step="any"
             />
           </div>
         </div>
 
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm space-y-4">
           <div>
-            <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-2">fuente</label>
+            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Fuente</label>
             <input
-              type="text" placeholder="sueldo, freelance, alquiler..." value={form.description}
+              type="text" placeholder="Ej: sueldo, freelance, alquiler..." value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              className="w-full bg-zinc-50 border border-zinc-200 text-black rounded-lg px-3 py-2.5 text-sm font-mono outline-none focus:border-black placeholder:text-zinc-300 transition-colors"
+              className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-accent-600 placeholder:text-zinc-300 transition-colors"
             />
           </div>
           <div>
-            <label className="block text-xs font-mono text-zinc-400 uppercase tracking-widest mb-2">date</label>
+            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Fecha</label>
             <input
               type="date" value={form.date}
               onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-              className="w-full bg-zinc-50 border border-zinc-200 text-black rounded-lg px-3 py-2.5 text-sm font-mono outline-none focus:border-black transition-colors"
+              className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-accent-600 transition-colors"
               style={{ colorScheme: 'light' }}
             />
           </div>
@@ -81,9 +81,9 @@ export default function IncomeForm({ addIncome }) {
 
         <button
           type="submit" disabled={!form.amount}
-          className="w-full bg-accent-600 hover:bg-accent-700 disabled:opacity-20 disabled:cursor-not-allowed text-white font-mono font-bold py-3.5 rounded-xl transition-colors text-sm"
+          className="w-full bg-accent-600 hover:bg-accent-700 disabled:opacity-20 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-colors text-sm"
         >
-          add_income()
+          Guardar ingreso
         </button>
       </form>
     </div>
