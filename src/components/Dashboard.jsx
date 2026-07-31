@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts'
 import {
-  Settings, Plus, Trash2, CheckCircle, AlertTriangle,
+  Settings, Plus, Trash2, CheckCircle,
   TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight,
 } from 'lucide-react'
 import { getMonthExpenses, fmt } from '../utils/finance'
@@ -43,15 +43,8 @@ export default function Dashboard({
   const totalSpent = monthExpenses.reduce((s, e) => s + e.amount, 0)
   const balance = income - totalSpent
 
-  const spendRules = budgetRules.filter(r => !r.trackAs)
-  const savingsRules = budgetRules.filter(r => r.trackAs)
-  const spendPct = spendRules.reduce((s, r) => s + r.pct, 0)
-
   const isConfirmed = (ruleId) =>
     savingsConfirmations?.some(c => c.rule_id === ruleId && c.month === currentMonth) ?? false
-
-  const getSpendRuleActual = (rule) =>
-    spendPct > 0 ? (rule.pct / spendPct) * totalSpent : 0
 
   // Donut: use real amounts if income exists, else show proportional %
   const donutData = budgetRules.map(rule => ({
@@ -85,8 +78,6 @@ export default function Dashboard({
       .slice(0, 8)
   }, [monthExpenses])
 
-  // Show spend rule cards only when there's something to display
-  const showSpendRules = spendRules.length > 0 && (income > 0 || totalSpent > 0)
   const noData = income === 0 && totalSpent === 0
 
   return (
@@ -204,11 +195,6 @@ export default function Dashboard({
             <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide">
               Distribución del presupuesto
             </h2>
-            {!income && (
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Registrá un ingreso para ver los objetivos calculados
-              </p>
-            )}
           </div>
           {!editingBudget && (
             <button
@@ -229,82 +215,17 @@ export default function Dashboard({
             />
           </div>
         ) : (
-          <div className="space-y-4">
-
-            {/* Savings / investment rules — always visible */}
-            {savingsRules.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {savingsRules.map(rule => (
-                  <SavingsConfirmCard
-                    key={rule.id}
-                    rule={rule}
-                    target={income > 0 ? income * rule.pct / 100 : null}
-                    confirmed={isConfirmed(rule.id)}
-                    currentMonth={currentMonth}
-                    onConfirm={confirmSavings}
-                    onUnconfirm={unconfirmSavings}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Spend rules — with bars if income, simplified if only expenses */}
-            {showSpendRules && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {spendRules.map(rule => {
-                  const actual = getSpendRuleActual(rule)
-                  if (income > 0) {
-                    const target = income * rule.pct / 100
-                    const pct = target > 0 ? Math.min((actual / target) * 100, 100) : 0
-                    const over = actual > target
-                    return (
-                      <div key={rule.id} className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: rule.color }} />
-                            <div>
-                              <p className="text-sm font-semibold text-zinc-900">{rule.label}</p>
-                              <p className="text-xs text-zinc-400 mt-0.5">{rule.pct}% · {fmt(target)}</p>
-                            </div>
-                          </div>
-                          {over && <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />}
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-baseline">
-                            <span className="text-xl font-bold text-zinc-900">{fmt(actual)}</span>
-                            <span className="text-xs text-zinc-400">de {fmt(target)}</span>
-                          </div>
-                          <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-700"
-                              style={{ width: `${pct}%`, backgroundColor: over ? '#f59e0b' : rule.color }}
-                            />
-                          </div>
-                          <p className="text-xs text-zinc-400">
-                            {over ? `Excedido por ${fmt(actual - target)}` : `Quedan ${fmt(target - actual)}`}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  }
-                  // No income — simplified card, just show what was spent
-                  return (
-                    <div key={rule.id} className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm">
-                      <div className="flex items-center gap-2.5 mb-3">
-                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: rule.color }} />
-                        <div>
-                          <p className="text-sm font-semibold text-zinc-900">{rule.label}</p>
-                          <p className="text-xs text-zinc-400 mt-0.5">{rule.pct}%</p>
-                        </div>
-                      </div>
-                      <p className="text-xl font-bold text-zinc-900">{fmt(actual)}</p>
-                      <p className="text-xs text-zinc-400 mt-1">gastado este mes</p>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {budgetRules.map(rule => (
+              <SavingsConfirmCard
+                key={rule.id}
+                rule={rule}
+                confirmed={isConfirmed(rule.id)}
+                currentMonth={currentMonth}
+                onConfirm={confirmSavings}
+                onUnconfirm={unconfirmSavings}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -399,7 +320,7 @@ export default function Dashboard({
   )
 }
 
-function SavingsConfirmCard({ rule, target, confirmed, currentMonth, onConfirm, onUnconfirm }) {
+function SavingsConfirmCard({ rule, target = null, confirmed, currentMonth, onConfirm, onUnconfirm }) {
   const [pending, setPending] = useState(false)
 
   const handleConfirm = async () => {
@@ -428,17 +349,15 @@ function SavingsConfirmCard({ rule, target, confirmed, currentMonth, onConfirm, 
         {confirmed && <CheckCircle size={16} className="text-accent-600 shrink-0 mt-0.5" />}
       </div>
 
-      {target !== null ? (
-        <>
+      {target !== null && (
+        <div className="mb-4">
           <p className="text-2xl font-bold text-zinc-900 mb-0.5">{fmt(target)}</p>
-          <p className="text-xs text-zinc-400 mb-4">objetivo este mes</p>
-        </>
-      ) : (
-        <p className="text-xs text-zinc-400 mb-4">Sin monto objetivo aún</p>
+          <p className="text-xs text-zinc-400">objetivo este mes</p>
+        </div>
       )}
 
       {confirmed ? (
-        <div className="space-y-2">
+        <div className="space-y-2 mt-4">
           <div className="flex items-center gap-1.5 text-accent-600 text-sm font-semibold">
             <CheckCircle size={15} /> Confirmado este mes
           </div>
@@ -452,7 +371,7 @@ function SavingsConfirmCard({ rule, target, confirmed, currentMonth, onConfirm, 
       ) : (
         <button
           onClick={handleConfirm} disabled={pending}
-          className="w-full bg-accent-600 hover:bg-accent-700 disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
+          className="w-full mt-4 bg-accent-600 hover:bg-accent-700 disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
         >
           <CheckCircle size={15} />
           {pending ? 'Guardando...' : 'Lo hice este mes'}
