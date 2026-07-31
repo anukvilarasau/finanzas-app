@@ -27,8 +27,8 @@ function loadBudgetRules() {
 }
 
 export function useExpenses(userId) {
-  const [income, setIncomeState] = useState(0)
   const [expenses, setExpenses] = useState([])
+  const [incomes, setIncomes] = useState([])
   const [budgetRules, setBudgetRulesState] = useState(loadBudgetRules)
   const [savingsConfirmations, setSavingsConfirmations] = useState([])
   const [loading, setLoading] = useState(true)
@@ -39,18 +39,15 @@ export function useExpenses(userId) {
     async function load() {
       setLoading(true)
 
-      const [{ data: expensesData }, { data: settingsData }, { data: confirmationsData }] = await Promise.all([
+      const [{ data: expensesData }, { data: incomesData }, { data: confirmationsData }] = await Promise.all([
         supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }),
-        supabase.from('settings').select('income').eq('user_id', userId).single(),
+        supabase.from('incomes').select('*').eq('user_id', userId).order('date', { ascending: false }),
         supabase.from('savings_confirmations').select('*').eq('user_id', userId),
       ])
 
+      if (expensesData) setExpenses(expensesData)
+      if (incomesData) setIncomes(incomesData)
       if (confirmationsData) setSavingsConfirmations(confirmationsData)
-
-      if (expensesData) {
-        setExpenses(expensesData)
-      }
-      if (settingsData) setIncomeState(settingsData.income)
 
       // Migrate localStorage data on first login
       const localRaw = localStorage.getItem('finanzas_v1')
@@ -68,10 +65,6 @@ export function useExpenses(userId) {
             const { data: migrated } = await supabase.from('expenses').insert(toInsert).select()
             if (migrated) setExpenses(migrated)
           }
-          if (local.income > 0) {
-            await supabase.from('settings').upsert({ user_id: userId, income: local.income })
-            setIncomeState(local.income)
-          }
           localStorage.removeItem('finanzas_v1')
         } catch {}
       }
@@ -81,12 +74,6 @@ export function useExpenses(userId) {
 
     load()
   }, [userId])
-
-  const setIncome = async (value) => {
-    const num = Number(value)
-    setIncomeState(num)
-    await supabase.from('settings').upsert({ user_id: userId, income: num })
-  }
 
   const addExpense = async (expense) => {
     const { data } = await supabase
@@ -100,14 +87,31 @@ export function useExpenses(userId) {
       })
       .select()
       .single()
-    if (data) {
-      setExpenses(prev => [data, ...prev])
-    }
+    if (data) setExpenses(prev => [data, ...prev])
   }
 
   const deleteExpense = async (id) => {
     await supabase.from('expenses').delete().eq('id', id)
     setExpenses(prev => prev.filter(e => e.id !== id))
+  }
+
+  const addIncome = async (income) => {
+    const { data } = await supabase
+      .from('incomes')
+      .insert({
+        user_id: userId,
+        amount: income.amount,
+        description: income.description,
+        date: income.date,
+      })
+      .select()
+      .single()
+    if (data) setIncomes(prev => [data, ...prev])
+  }
+
+  const deleteIncome = async (id) => {
+    await supabase.from('incomes').delete().eq('id', id)
+    setIncomes(prev => prev.filter(i => i.id !== id))
   }
 
   const setBudgetRules = (rules) => {
@@ -135,8 +139,8 @@ export function useExpenses(userId) {
   }
 
   return {
-    income, expenses, budgetRules, savingsConfirmations,
-    setIncome, addExpense, deleteExpense, setBudgetRules,
-    confirmSavings, unconfirmSavings, loading,
+    expenses, incomes, budgetRules, savingsConfirmations,
+    addExpense, deleteExpense, addIncome, deleteIncome,
+    setBudgetRules, confirmSavings, unconfirmSavings, loading,
   }
 }

@@ -3,7 +3,7 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts'
-import { Edit3, X, Settings, Plus, Trash2, CheckCircle, AlertTriangle, TrendingUp, Wallet } from 'lucide-react'
+import { X, Settings, Plus, Trash2, CheckCircle, AlertTriangle, TrendingUp, Wallet } from 'lucide-react'
 import { getMonthExpenses, fmt } from '../utils/finance'
 
 const ACCENT = '#7c3aed'
@@ -17,40 +17,40 @@ const PRESET_COLORS = [
 
 const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 
-export default function Dashboard({ income, expenses, budgetRules, savingsConfirmations, setIncome, setBudgetRules, confirmSavings, unconfirmSavings }) {
-  const [editingIncome, setEditingIncome] = useState(false)
-  const [incomeInput, setIncomeInput] = useState('')
+export default function Dashboard({ incomes, expenses, budgetRules, savingsConfirmations, setBudgetRules, confirmSavings, unconfirmSavings, onNavigate }) {
   const [editingBudget, setEditingBudget] = useState(false)
 
   const now = new Date()
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  // Income = sum of all income records for the current month
+  const income = incomes
+    .filter(i => i.date.startsWith(currentMonth))
+    .reduce((s, i) => s + i.amount, 0)
+
+  const currentMonthIncomeCount = incomes.filter(i => i.date.startsWith(currentMonth)).length
+
   const monthExpenses = getMonthExpenses(expenses, now.getFullYear(), now.getMonth())
   const totalSpent = monthExpenses.reduce((s, e) => s + e.amount, 0)
 
   const spendRules = budgetRules.filter(r => !r.trackAs)
   const savingsRules = budgetRules.filter(r => r.trackAs)
   const spendPct = spendRules.reduce((s, r) => s + r.pct, 0)
-  const spendBudget = income * spendPct / 100
-
-  // Current month key e.g. '2025-07'
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
   function isConfirmed(ruleId) {
     return savingsConfirmations?.some(c => c.rule_id === ruleId && c.month === currentMonth) ?? false
   }
 
-  // Actual per spending rule (proportional share of totalSpent)
   function getSpendRuleActual(rule) {
     return spendPct > 0 ? (rule.pct / spendPct) * totalSpent : 0
   }
 
-  // Donut data
   const donutData = budgetRules.map(rule => ({
     name: rule.label,
     value: income * rule.pct / 100,
     color: rule.color,
   }))
 
-  // Last 6 months trend
   const trendData = useMemo(() => {
     return Array.from({ length: 6 }, (_, i) => {
       const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
@@ -63,7 +63,6 @@ export default function Dashboard({ income, expenses, budgetRules, savingsConfir
     })
   }, [expenses, now.getMonth(), now.getFullYear()])
 
-  // Description breakdown
   const descriptionData = useMemo(() => {
     const map = {}
     monthExpenses.forEach(e => {
@@ -75,14 +74,6 @@ export default function Dashboard({ income, expenses, budgetRules, savingsConfir
       .sort((a, b) => b.value - a.value)
       .slice(0, 8)
   }, [monthExpenses])
-
-  const handleSaveIncome = () => {
-    if (incomeInput && Number(incomeInput) > 0) {
-      setIncome(Number(incomeInput))
-      setEditingIncome(false)
-      setIncomeInput('')
-    }
-  }
 
   const tooltipStyle = {
     background: '#fff',
@@ -107,53 +98,34 @@ export default function Dashboard({ income, expenses, budgetRules, savingsConfir
         </div>
 
         <div className="bg-white border border-zinc-200 rounded-2xl px-4 py-3 shadow-sm min-w-48">
-          {editingIncome ? (
-            <div className="flex gap-2 items-center">
-              <span className="text-zinc-400 text-sm">$</span>
-              <input
-                autoFocus type="number" placeholder="0" value={incomeInput}
-                onChange={e => setIncomeInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSaveIncome()}
-                className="flex-1 bg-zinc-50 text-zinc-900 rounded-lg px-3 py-1.5 text-sm outline-none border border-zinc-200 focus:border-accent-600 w-28 transition-colors"
-              />
-              <button onClick={handleSaveIncome}
-                className="bg-accent-600 hover:bg-accent-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors">
-                OK
-              </button>
-              <button onClick={() => setEditingIncome(false)} className="text-zinc-400 hover:text-zinc-700">
-                <X size={14} />
-              </button>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs text-zinc-400 font-medium mb-0.5">Ingreso del mes</p>
+              <p className="text-lg font-bold text-zinc-900">{income > 0 ? fmt(income) : '—'}</p>
             </div>
-          ) : (
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs text-zinc-400 font-medium mb-0.5">Ingreso mensual</p>
-                <p className="text-lg font-bold text-zinc-900">{income > 0 ? fmt(income) : '—'}</p>
-              </div>
-              <button
-                onClick={() => { setEditingIncome(true); setIncomeInput(income > 0 ? String(income) : '') }}
-                className="text-zinc-400 hover:text-accent-600 transition-colors">
-                <Edit3 size={15} />
-              </button>
-            </div>
-          )}
+            {currentMonthIncomeCount > 0 && (
+              <span className="text-xs text-zinc-400 shrink-0">
+                {currentMonthIncomeCount} registro{currentMonthIncomeCount !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Empty state: no income */}
+      {/* Empty state: no income this month */}
       {income === 0 && (
         <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm text-center space-y-4">
           <div className="w-14 h-14 bg-accent-50 rounded-2xl flex items-center justify-center mx-auto">
             <Wallet size={24} className="text-accent-600" />
           </div>
           <div>
-            <p className="text-lg font-semibold text-zinc-900">Configurá tu ingreso mensual</p>
-            <p className="text-sm text-zinc-400 mt-1">Ingresá tu salario para ver el análisis completo de tu presupuesto.</p>
+            <p className="text-lg font-semibold text-zinc-900">Sin ingresos este mes</p>
+            <p className="text-sm text-zinc-400 mt-1">Registrá tu primer ingreso para ver el análisis completo de tu presupuesto.</p>
           </div>
           <button
-            onClick={() => setEditingIncome(true)}
+            onClick={() => onNavigate?.('ingreso')}
             className="bg-accent-600 hover:bg-accent-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors">
-            Configurar ingreso
+            Registrar ingreso
           </button>
         </div>
       )}
@@ -183,7 +155,6 @@ export default function Dashboard({ income, expenses, budgetRules, savingsConfir
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Spending rule cards with progress bar */}
                 {spendRules.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {spendRules.map(rule => {
@@ -222,7 +193,6 @@ export default function Dashboard({ income, expenses, budgetRules, savingsConfir
                   </div>
                 )}
 
-                {/* Savings rule confirmation boxes */}
                 {savingsRules.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {savingsRules.map(rule => (
@@ -245,7 +215,6 @@ export default function Dashboard({ income, expenses, budgetRules, savingsConfir
           {/* Charts row: donut + trend */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            {/* Donut chart */}
             <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
               <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide mb-4">Distribución del ingreso</h3>
               <div className="flex items-center gap-4">
@@ -274,7 +243,6 @@ export default function Dashboard({ income, expenses, budgetRules, savingsConfir
               </div>
             </div>
 
-            {/* 6-month trend */}
             <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
               <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide mb-4">Últimos 6 meses</h3>
               <ResponsiveContainer width="100%" height={140}>

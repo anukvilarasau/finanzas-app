@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
-import { LayoutDashboard, PlusCircle, Clock, Wallet, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, PlusCircle, TrendingUp, Clock, Wallet, LogOut, Menu, X } from 'lucide-react'
 import { supabase } from './lib/supabase'
 import { useExpenses } from './hooks/useExpenses'
 import Dashboard from './components/Dashboard'
 import ExpenseForm from './components/ExpenseForm'
+import IncomeForm from './components/IncomeForm'
 import Timeline from './components/Timeline'
 import Login from './components/Login'
 
 const NAV = [
-  { id: 'dashboard', label: 'Dashboard',       icon: LayoutDashboard },
-  { id: 'nuevo',     label: 'Registrar Gasto', icon: PlusCircle },
-  { id: 'historial', label: 'Historial',       icon: Clock },
+  { id: 'dashboard', label: 'Dashboard',         icon: LayoutDashboard },
+  { id: 'nuevo',     label: 'Registrar Gasto',   icon: PlusCircle },
+  { id: 'ingreso',   label: 'Registrar Ingreso', icon: TrendingUp },
+  { id: 'historial', label: 'Historial',          icon: Clock },
 ]
 
 export default function App() {
@@ -94,17 +96,30 @@ export default function App() {
     <>
       {view === 'dashboard' && (
         <Dashboard
-          income={store.income} expenses={store.expenses} budgetRules={store.budgetRules}
+          incomes={store.incomes}
+          expenses={store.expenses}
+          budgetRules={store.budgetRules}
           savingsConfirmations={store.savingsConfirmations}
-          setIncome={store.setIncome} setBudgetRules={store.setBudgetRules}
-          confirmSavings={store.confirmSavings} unconfirmSavings={store.unconfirmSavings}
+          setBudgetRules={store.setBudgetRules}
+          confirmSavings={store.confirmSavings}
+          unconfirmSavings={store.unconfirmSavings}
+          onNavigate={navigate}
         />
       )}
       {view === 'nuevo' && (
         <ExpenseForm addExpense={store.addExpense} />
       )}
+      {view === 'ingreso' && (
+        <IncomeForm addIncome={store.addIncome} />
+      )}
       {view === 'historial' && (
-        <Timeline expenses={store.expenses} budgetRules={store.budgetRules} deleteExpense={store.deleteExpense} />
+        <Timeline
+          expenses={store.expenses}
+          incomes={store.incomes}
+          budgetRules={store.budgetRules}
+          deleteExpense={store.deleteExpense}
+          deleteIncome={store.deleteIncome}
+        />
       )}
     </>
   )
