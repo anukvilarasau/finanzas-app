@@ -93,7 +93,12 @@ export default function App() {
   ) : (
     <>
       {view === 'dashboard' && (
-        <Dashboard income={store.income} expenses={store.expenses} budgetRules={store.budgetRules} setIncome={store.setIncome} setBudgetRules={store.setBudgetRules} />
+        <Dashboard
+          income={store.income} expenses={store.expenses} budgetRules={store.budgetRules}
+          savingsConfirmations={store.savingsConfirmations}
+          setIncome={store.setIncome} setBudgetRules={store.setBudgetRules}
+          confirmSavings={store.confirmSavings} unconfirmSavings={store.unconfirmSavings}
+        />
       )}
       {view === 'nuevo' && (
         <ExpenseForm addExpense={store.addExpense} />

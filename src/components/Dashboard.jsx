@@ -17,7 +17,7 @@ const PRESET_COLORS = [
 
 const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 
-export default function Dashboard({ income, expenses, budgetRules, setIncome, setBudgetRules }) {
+export default function Dashboard({ income, expenses, budgetRules, savingsConfirmations, setIncome, setBudgetRules, confirmSavings, unconfirmSavings }) {
   const [editingIncome, setEditingIncome] = useState(false)
   const [incomeInput, setIncomeInput] = useState('')
   const [editingBudget, setEditingBudget] = useState(false)
@@ -29,16 +29,18 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
   const spendRules = budgetRules.filter(r => !r.trackAs)
   const savingsRules = budgetRules.filter(r => r.trackAs)
   const spendPct = spendRules.reduce((s, r) => s + r.pct, 0)
-  const totalSavingsPct = savingsRules.reduce((s, r) => s + r.pct, 0)
   const spendBudget = income * spendPct / 100
-  const remaining = Math.max(0, income - totalSpent)
 
-  // Actual per rule: spending rules share totalSpent proportionally, savings rules share remaining
-  function getRuleActual(rule) {
-    if (!rule.trackAs) {
-      return spendPct > 0 ? (rule.pct / spendPct) * totalSpent : 0
-    }
-    return totalSavingsPct > 0 ? (rule.pct / totalSavingsPct) * remaining : 0
+  // Current month key e.g. '2025-07'
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  function isConfirmed(ruleId) {
+    return savingsConfirmations?.some(c => c.rule_id === ruleId && c.month === currentMonth) ?? false
+  }
+
+  // Actual per spending rule (proportional share of totalSpent)
+  function getSpendRuleActual(rule) {
+    return spendPct > 0 ? (rule.pct / spendPct) * totalSpent : 0
   }
 
   // Donut data
@@ -180,53 +182,62 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
                 />
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {budgetRules.map(rule => {
-                  const target = income * rule.pct / 100
-                  const actual = getRuleActual(rule)
-                  const pct = target > 0 ? Math.min((actual / target) * 100, 100) : 0
-                  const over = !rule.trackAs && actual > target
-                  const met = rule.trackAs && actual >= target
-                  return (
-                    <div key={rule.id} className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: rule.color }} />
-                          <div>
-                            <p className="text-sm font-semibold text-zinc-900">{rule.label}</p>
-                            <p className="text-xs text-zinc-400 mt-0.5">{rule.pct}% · {fmt(target)}</p>
+              <div className="space-y-4">
+                {/* Spending rule cards with progress bar */}
+                {spendRules.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {spendRules.map(rule => {
+                      const target = income * rule.pct / 100
+                      const actual = getSpendRuleActual(rule)
+                      const pct = target > 0 ? Math.min((actual / target) * 100, 100) : 0
+                      const over = actual > target
+                      return (
+                        <div key={rule.id} className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: rule.color }} />
+                              <div>
+                                <p className="text-sm font-semibold text-zinc-900">{rule.label}</p>
+                                <p className="text-xs text-zinc-400 mt-0.5">{rule.pct}% · {fmt(target)}</p>
+                              </div>
+                            </div>
+                            {over && <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />}
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-baseline">
+                              <span className="text-xl font-bold text-zinc-900">{fmt(actual)}</span>
+                              <span className="text-xs text-zinc-400">de {fmt(target)}</span>
+                            </div>
+                            <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all duration-700"
+                                style={{ width: `${pct}%`, backgroundColor: over ? '#f59e0b' : rule.color }} />
+                            </div>
+                            <p className="text-xs text-zinc-400">
+                              {over ? `Excedido por ${fmt(actual - target)}` : `Quedan ${fmt(target - actual)}`}
+                            </p>
                           </div>
                         </div>
-                        {over && <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />}
-                        {met && <CheckCircle size={14} className="text-emerald-500 shrink-0 mt-0.5" />}
-                      </div>
+                      )
+                    })}
+                  </div>
+                )}
 
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-xl font-bold text-zinc-900">{fmt(actual)}</span>
-                          <span className="text-xs text-zinc-400">de {fmt(target)}</span>
-                        </div>
-                        <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{
-                              width: `${pct}%`,
-                              backgroundColor: over ? '#f59e0b' : met ? '#10b981' : rule.color,
-                            }}
-                          />
-                        </div>
-                        <p className="text-xs text-zinc-400">
-                          {over
-                            ? `Excedido por ${fmt(actual - target)}`
-                            : rule.trackAs
-                              ? met ? 'Meta alcanzada ✓' : `Faltan ${fmt(target - actual)}`
-                              : `Quedan ${fmt(target - actual)}`
-                          }
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
+                {/* Savings rule confirmation boxes */}
+                {savingsRules.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {savingsRules.map(rule => (
+                      <SavingsConfirmCard
+                        key={rule.id}
+                        rule={rule}
+                        target={income * rule.pct / 100}
+                        confirmed={isConfirmed(rule.id)}
+                        currentMonth={currentMonth}
+                        onConfirm={confirmSavings}
+                        onUnconfirm={unconfirmSavings}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -315,6 +326,57 @@ export default function Dashboard({ income, expenses, budgetRules, setIncome, se
         </>
       )}
 
+    </div>
+  )
+}
+
+function SavingsConfirmCard({ rule, target, confirmed, currentMonth, onConfirm, onUnconfirm }) {
+  const [pending, setPending] = useState(false)
+
+  const handleConfirm = async () => {
+    setPending(true)
+    await onConfirm(rule.id, currentMonth)
+    setPending(false)
+  }
+  const handleUnconfirm = async () => {
+    setPending(true)
+    await onUnconfirm(rule.id, currentMonth)
+    setPending(false)
+  }
+
+  return (
+    <div className={`rounded-2xl p-4 border transition-all ${confirmed ? 'bg-accent-50 border-accent-200' : 'bg-white border-zinc-200'} shadow-sm`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: rule.color }} />
+          <div>
+            <p className="text-sm font-semibold text-zinc-900">{rule.label}</p>
+            <p className="text-xs text-zinc-400 mt-0.5">{rule.pct}%</p>
+          </div>
+        </div>
+        {confirmed && <CheckCircle size={16} className="text-accent-600 shrink-0 mt-0.5" />}
+      </div>
+
+      <p className="text-2xl font-bold text-zinc-900 mb-0.5">{fmt(target)}</p>
+      <p className="text-xs text-zinc-400 mb-4">objetivo este mes</p>
+
+      {confirmed ? (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5 text-accent-600 text-sm font-semibold">
+            <CheckCircle size={15} /> Confirmado este mes
+          </div>
+          <button onClick={handleUnconfirm} disabled={pending}
+            className="text-xs text-zinc-400 hover:text-zinc-700 underline transition-colors disabled:opacity-40">
+            Deshacer
+          </button>
+        </div>
+      ) : (
+        <button onClick={handleConfirm} disabled={pending}
+          className="w-full bg-accent-600 hover:bg-accent-700 disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+          <CheckCircle size={15} />
+          {pending ? 'Guardando...' : 'Lo hice este mes'}
+        </button>
+      )}
     </div>
   )
 }

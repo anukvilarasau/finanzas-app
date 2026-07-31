@@ -30,6 +30,7 @@ export function useExpenses(userId) {
   const [income, setIncomeState] = useState(0)
   const [expenses, setExpenses] = useState([])
   const [budgetRules, setBudgetRulesState] = useState(loadBudgetRules)
+  const [savingsConfirmations, setSavingsConfirmations] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -38,10 +39,13 @@ export function useExpenses(userId) {
     async function load() {
       setLoading(true)
 
-      const [{ data: expensesData }, { data: settingsData }] = await Promise.all([
+      const [{ data: expensesData }, { data: settingsData }, { data: confirmationsData }] = await Promise.all([
         supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }),
         supabase.from('settings').select('income').eq('user_id', userId).single(),
+        supabase.from('savings_confirmations').select('*').eq('user_id', userId),
       ])
+
+      if (confirmationsData) setSavingsConfirmations(confirmationsData)
 
       if (expensesData) {
         setExpenses(expensesData)
@@ -111,5 +115,28 @@ export function useExpenses(userId) {
     localStorage.setItem(BUDGET_KEY, JSON.stringify(rules))
   }
 
-  return { income, expenses, budgetRules, setIncome, addExpense, deleteExpense, setBudgetRules, loading }
+  const confirmSavings = async (ruleId, month) => {
+    const { data } = await supabase
+      .from('savings_confirmations')
+      .insert({ user_id: userId, rule_id: ruleId, month })
+      .select()
+      .single()
+    if (data) setSavingsConfirmations(prev => [...prev, data])
+  }
+
+  const unconfirmSavings = async (ruleId, month) => {
+    await supabase
+      .from('savings_confirmations')
+      .delete()
+      .eq('user_id', userId)
+      .eq('rule_id', ruleId)
+      .eq('month', month)
+    setSavingsConfirmations(prev => prev.filter(c => !(c.rule_id === ruleId && c.month === month)))
+  }
+
+  return {
+    income, expenses, budgetRules, savingsConfirmations,
+    setIncome, addExpense, deleteExpense, setBudgetRules,
+    confirmSavings, unconfirmSavings, loading,
+  }
 }
